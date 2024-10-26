@@ -1,0 +1,67 @@
+// models/usuarioModel.js
+import supabase from '../config/db.js';
+
+const Usuario = {
+  async crearUsuario({ nombre, apellido, correo, contrasena, rol_id }) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .insert([{ nombre, apellido, correo, contrasena, rol_id }]);
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async obtenerUsuarios() {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*');
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async obtenerUsuarioPorId(usuario_id) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('usuario_id', usuario_id)
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async actualizarUsuario(usuario_id, { nombre, apellido, correo, contrasena, rol_id }) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .update({ nombre, apellido, correo, contrasena, rol_id })
+      .eq('usuario_id', usuario_id);
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async eliminarUsuario(usuario_id) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .delete()
+      .eq('usuario_id', usuario_id);
+    
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  // Función para obtener un usuario por correo electrónico
+  async obtenerUsuarioPorCorreo(correo) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('correo', correo)
+      .single();
+    
+    if (error) throw new Error(error.message);
+    return data;
+  }
+};
+
+export default Usuario;

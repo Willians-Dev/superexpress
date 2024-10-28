@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Necesitamos esto para redirigir
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate(); // Hook para redirigir
+
+  // Función para cerrar sesión
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Eliminar el token de localStorage
+    navigate('/'); // Redirigir al login
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -9,6 +17,7 @@ const Dashboard = () => {
   
       if (!token) {
         console.error('No se encontró el token');
+        navigate('/'); // Redirigir al login si no hay token
         return;
       }
   
@@ -30,11 +39,20 @@ const Dashboard = () => {
     };
   
     fetchUsers();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <button
+          className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-400 transition"
+          onClick={handleLogout}
+        >
+          Cerrar Sesión
+        </button>
+      </div>
+
       <table className="table-auto w-full">
         <thead>
           <tr>

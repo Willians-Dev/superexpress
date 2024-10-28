@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ConfirmModal from '../components/ConfirmModal'; // Asegúrate de la ruta correcta
+import DashboardLayout from '../layouts/DashboardLayout';  // Importamos el Layout con Sidebar y Header
 
 const Usuarios = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(true);  // Para controlar el estado de carga
-  const [error, setError] = useState(null);      // Para manejar errores
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -21,7 +22,7 @@ const Usuarios = () => {
         const response = await fetch('http://localhost:5000/api/usuarios', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,  // Enviar el token en el header
+            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -29,15 +30,15 @@ const Usuarios = () => {
         const data = await response.json();
         setUsers(data);
       } catch (err) {
-        setError(err.message); // Guardar el mensaje de error
+        setError(err.message);
       } finally {
-        setLoading(false);  // Siempre desactivar el estado de carga
+        setLoading(false);
       }
     };
 
     const fetchRoles = async () => {
       try {
-        const token = localStorage.getItem('token'); // Obtener el token almacenado
+        const token = localStorage.getItem('token');
 
         if (!token) {
           throw new Error('No se encontró el token');
@@ -46,7 +47,7 @@ const Usuarios = () => {
         const response = await fetch('http://localhost:5000/api/roles', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,  // Enviar el token en el header
+            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -62,10 +63,9 @@ const Usuarios = () => {
     fetchRoles();
   }, []);
 
-  // Función para eliminar un usuario
   const handleDeleteUser = async (userId) => {
     try {
-      const token = localStorage.getItem('token'); // Obtener el token almacenado
+      const token = localStorage.getItem('token');
 
       if (!token) {
         throw new Error('No se encontró el token');
@@ -74,7 +74,7 @@ const Usuarios = () => {
       await fetch(`http://localhost:5000/api/usuarios/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,  // Enviar el token en el header
+          'Authorization': `Bearer ${token}`,
         },
       });
       setUsers(users.filter((user) => user.usuario_id !== userId));
@@ -83,16 +83,14 @@ const Usuarios = () => {
     }
   };
 
-  // Función para abrir el modal de confirmación
   const handleSave = (user) => {
     setSelectedUser(user);
     setShowModal(true);
   };
 
-  // Función para confirmar y guardar los cambios
   const confirmSave = async () => {
     try {
-      const token = localStorage.getItem('token'); // Obtener el token almacenado
+      const token = localStorage.getItem('token');
 
       if (!token) {
         throw new Error('No se encontró el token');
@@ -101,7 +99,7 @@ const Usuarios = () => {
       await fetch(`http://localhost:5000/api/usuarios/${selectedUser.usuario_id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,  // Enviar el token en el header
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(selectedUser),
@@ -113,7 +111,6 @@ const Usuarios = () => {
     }
   };
 
-  // Función para editar el rol
   const handleRoleChange = (userId, newRoleId) => {
     setUsers(
       users.map((user) =>
@@ -122,11 +119,11 @@ const Usuarios = () => {
     );
   };
 
-  if (loading) return <p>Cargando...</p>;  // Mostrar mientras se carga
-  if (error) return <p>Error: {error}</p>;  // Mostrar si ocurre un error
+  if (loading) return <p>Cargando...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="p-4">
+    <DashboardLayout>
       <h1 className="text-2xl font-bold mb-4">Gestión de Usuarios</h1>
 
       <table className="table-auto w-full mb-6">
@@ -178,7 +175,6 @@ const Usuarios = () => {
         </tbody>
       </table>
 
-      {/* Modal de confirmación */}
       {showModal && (
         <ConfirmModal
           user={selectedUser}
@@ -186,7 +182,7 @@ const Usuarios = () => {
           onCancel={() => setShowModal(false)}
         />
       )}
-    </div>
+    </DashboardLayout>
   );
 };
 

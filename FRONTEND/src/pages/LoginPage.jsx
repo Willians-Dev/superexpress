@@ -1,342 +1,122 @@
-import React, { useState, useEffect } from 'react';
-import ConfirmModal from '../components/ConfirmModal'; // Asegúrate de la ruta correcta
-import DashboardLayout from '../layouts/DashboardLayout';  // Importamos el Layout con Sidebar y Header
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import Header from '../components/Header'; // Asegúrate de la ruta correcta
+import Footer from '../components/Footer'; // Asegúrate de la ruta correcta
+import LoginInfo from '../components/LoginInfo'; // Asegúrate de la ruta correcta
 
-const Usuarios = () => {
-  const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
-  const [newUser, setNewUser] = useState({ nombre: '', apellido: '', correo: '', contrasena: '', rol_id: '' });
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const token = localStorage.getItem('token'); // Obtener el token almacenado
-        if (!token) {
-          throw new Error('No se encontró el token');
-        }
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError('Debe ingresar credenciales válidas');
+      return;
+    }
 
-        const response = await fetch('http://localhost:5000/api/usuarios', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) throw new Error('Error al obtener los usuarios');
-        const data = await response.json();
-        setUsers(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchRoles = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No se encontró el token');
-        }
-
-        const response = await fetch('http://localhost:5000/api/roles', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) throw new Error('Error al obtener los roles');
-        const data = await response.json();
-        setRoles(data);
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
-    fetchUsers();
-    fetchRoles();
-  }, []);
-
-  // Crear nuevo usuario
-  const handleCreateUser = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/usuarios', {
+      const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify({ correo: email, contrasena: password }),
       });
-      if (!response.ok) throw new Error('Error al crear el usuario');
+
       const data = await response.json();
-      setUsers([...users, data]); // Añadir nuevo usuario a la lista
-      setShowCreateUserModal(false);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
-  // Cambiar la contraseña del usuario
-  const handleChangePassword = async (userId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/usuarios/${userId}/password`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ contrasena: password }),
-      });
-      if (!response.ok) throw new Error('Error al cambiar la contraseña');
-      setShowPasswordModal(false);
-      setPassword('');  // Resetear campo de contraseña
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No se encontró el token');
+      if (response.ok) {
+        // Almacenar el token JWT en localStorage
+        localStorage.setItem('token', data.token); 
+        navigate('/dashboard'); // Redirigir al dashboard
+      } else {
+        setError(data.message); // Mostrar el mensaje de error del backend
       }
-
-      await fetch(`http://localhost:5000/api/usuarios/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      setUsers(users.filter((user) => user.usuario_id !== userId));
-    } catch (err) {
-      setError('Error al eliminar el usuario');
+    } catch (error) {
+      setError('Error al iniciar sesión');
     }
   };
-
-  const handleSave = (user) => {
-    setSelectedUser(user);
-    setShowModal(true);
-  };
-
-  const confirmSave = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No se encontró el token');
-      }
-
-      await fetch(`http://localhost:5000/api/usuarios/${selectedUser.usuario_id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(selectedUser),
-      });
-      setShowModal(false);
-      setSelectedUser(null);
-    } catch (err) {
-      setError('Error al guardar los cambios');
-    }
-  };
-
-  const handleRoleChange = (userId, newRoleId) => {
-    setUsers(
-      users.map((user) =>
-        user.usuario_id === userId ? { ...user, rol_id: newRoleId } : user
-      )
-    );
-  };
-
-  if (loading) return <p>Cargando...</p>;
-  if (error) return <p>Error: {error}</p>;
 
   return (
-    <DashboardLayout>
-      <h1 className="text-2xl font-bold mb-4">Gestión de Usuarios</h1>
+    <div className="flex flex-col min-h-screen">
+      <Header /> {/* Aquí se integra el Header */}
 
-      {/* Botón Crear Usuario */}
-      <button
-        className="bg-green-500 text-white py-2 px-4 rounded-md mb-4"
-        onClick={() => setShowCreateUserModal(true)}
-      >
-        Crear Usuario
-      </button>
+      {/* La sección crece para llenar el espacio disponible */}
+      <section className="flex-grow flex items-center justify-center bg-white">
+        <div className="lg:grid lg:grid-cols-12 lg:w-full">
+          <LoginInfo /> {/* Aquí se integra el nuevo componente LoginInfo */}
 
-      <table className="table-auto w-full mb-6">
-        <thead>
-          <tr>
-            <th className="px-4 py-2">ID</th>
-            <th className="px-4 py-2">Nombre</th>
-            <th className="px-4 py-2">Correo</th>
-            <th className="px-4 py-2">Rol</th>
-            <th className="px-4 py-2">Acciones</th>
-            <th className="px-4 py-2">Contraseña</th> {/* Nueva columna para cambiar contraseña */}
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.usuario_id}>
-              <td className="border px-4 py-2">{user.usuario_id}</td>
-              <td className="border px-4 py-2">{user.nombre} {user.apellido}</td>
-              <td className="border px-4 py-2">{user.correo}</td>
-              <td className="border px-4 py-2">
-                <select
-                  value={user.rol_id || ''}
-                  onChange={(e) => handleRoleChange(user.usuario_id, e.target.value)}
-                  className="p-2 rounded-md border border-gray-300"
-                >
-                  <option value="">Seleccione un rol</option>
-                  {roles.map((rol) => (
-                    <option key={rol.rol_id} value={rol.rol_id}>
-                      {rol.rol_nombre}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td className="border px-4 py-2">
-                <button
-                  className="bg-blue-500 text-white py-1 px-3 rounded-md mr-2"
-                  onClick={() => handleSave(user)}
-                >
-                  Guardar
-                </button>
-                <button
-                  className="bg-red-500 text-white py-1 px-3 rounded-md"
-                  onClick={() => handleDeleteUser(user.usuario_id)}
-                >
-                  Eliminar
-                </button>
-              </td>
-              {/* Columna para cambiar la contraseña */}
-              <td className="border px-4 py-2">
-                <button
-                  className="bg-yellow-500 text-white py-1 px-3 rounded-md"
-                  onClick={() => {
-                    setSelectedUser(user);
-                    setShowPasswordModal(true);
-                  }}
-                >
-                  Cambiar Contraseña
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          <main className="flex items-center justify-center px-8 py-8 sm:px-12 lg:col-span-7 xl:col-span-6">
+            <div className="max-w-xl lg:max-w-3xl w-full">
+              <h2 className="text-2xl font-bold mb-6 text-center">Inicio de sesión</h2>
+              <form className="grid grid-cols-6 gap-6">
+                <div className="col-span-6">
+                  <label htmlFor="Email" className="block text-sm font-medium text-gray-700">
+                    Correo Electrónico
+                  </label>
+                  <input
+                    type="email"
+                    id="Email"
+                    name="email"
+                    className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
+                    placeholder="correo@ejemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
 
-      {showModal && (
-        <ConfirmModal
-          user={selectedUser}
-          onConfirm={confirmSave}
-          onCancel={() => setShowModal(false)}
-        />
-      )}
+                <div className="col-span-6">
+                  <label htmlFor="Password" className="block text-sm font-medium text-gray-700">
+                    Contraseña
+                  </label>
+                  <input
+                    type="password"
+                    id="Password"
+                    name="password"
+                    className="mt-1 w-full rounded-md border-gray-200 bg-white text-sm text-gray-700 shadow-sm"
+                    placeholder="********"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
 
-      {showPasswordModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-            <h3 className="text-2xl font-bold mb-4">Cambiar Contraseña</h3>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Nueva Contraseña"
-              className="mb-4 p-2 border border-gray-300 rounded w-full"
-            />
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => handleChangePassword(selectedUser.usuario_id)}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-              >
-                Guardar
-              </button>
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-              >
-                Cancelar
-              </button>
+                {error && (
+                  <p className="col-span-6 text-red-500 text-sm mt-2">{error}</p>
+                )}
+
+                <div className="col-span-6">
+                  <button
+                    type="button"
+                    onClick={handleLogin}
+                    className="w-full inline-block shrink-0 rounded-md border border-[#2C35E0FF] bg-[#2C35E0FF] px-12 py-3 text-sm font-medium text-white transition hover:bg-transparent hover:text-[#2C35E0FF] focus:outline-none focus:ring active:text-blue-500"
+                  >
+                    Iniciar Sesión
+                  </button>
+                </div>
+              </form>
+
+              {/* Links adicionales */}
+              <div className="mt-4 text-center">
+                <Link to="/registro" className="text-sm text-[#2C35E0FF] hover:underline">
+                  ¿No tienes una cuenta? Regístrate aquí
+                </Link>
+              </div>
+
+              <div className="mt-2 text-center">
+                <Link to="/recuperar-password" className="text-sm text-[#2C35E0FF] hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
-          </div>
+          </main>
         </div>
-      )}
+      </section>
 
-      {showCreateUserModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg max-w-lg w-full">
-            <h3 className="text-2xl font-bold mb-4">Crear Nuevo Usuario</h3>
-            <input
-              type="text"
-              value={newUser.nombre}
-              onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })}
-              placeholder="Nombre"
-              className="mb-4 p-2 border border-gray-300 rounded w-full"
-            />
-            <input
-              type="text"
-              value={newUser.apellido}
-              onChange={(e) => setNewUser({ ...newUser, apellido: e.target.value })}
-              placeholder="Apellido"
-              className="mb-4 p-2 border border-gray-300 rounded w-full"
-            />
-            <input
-              type="email"
-              value={newUser.correo}
-              onChange={(e) => setNewUser({ ...newUser, correo: e.target.value })}
-              placeholder="Correo"
-              className="mb-4 p-2 border border-gray-300 rounded w-full"
-            />
-            <input
-              type="password"
-              value={newUser.contrasena}
-              onChange={(e) => setNewUser({ ...newUser, contrasena: e.target.value })}
-              placeholder="Contraseña"
-              className="mb-4 p-2 border border-gray-300 rounded w-full"
-            />
-            <select
-              value={newUser.rol_id}
-              onChange={(e) => setNewUser({ ...newUser, rol_id: e.target.value })}
-              className="mb-4 p-2 border border-gray-300 rounded w-full"
-            >
-              <option value="">Seleccione un rol</option>
-              {roles.map((rol) => (
-                <option key={rol.rol_id} value={rol.rol_id}>
-                  {rol.rol_nombre}
-                </option>
-              ))}
-            </select>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={handleCreateUser}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-              >
-                Crear
-              </button>
-              <button
-                onClick={() => setShowCreateUserModal(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </DashboardLayout>
+      <Footer /> {/* Aquí se integra el Footer */}
+    </div>
   );
 };
 
-export default Usuarios;
+export default LoginPage;

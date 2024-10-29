@@ -1,12 +1,17 @@
 // models/usuarioModel.js
 import supabase from '../config/db.js';
+import bcrypt from 'bcrypt';
 
 const Usuario = {
   async crearUsuario({ nombre, apellido, correo, contrasena, rol_id }) {
+    // Generar un salt y encriptar la contraseña
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+
     const { data, error } = await supabase
       .from('usuarios')
-      .insert([{ nombre, apellido, correo, contrasena, rol_id }]);
-    
+      .insert([{ nombre, apellido, correo, contrasena: hashedPassword, rol_id }]);
+
     if (error) throw new Error(error.message);
     return data;
   },

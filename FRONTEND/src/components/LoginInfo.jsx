@@ -6,7 +6,7 @@ const LoginInfo = () => {
       <img
         alt="background"
         src="/login.jpg" // Cambia la ruta a la imagen ubicada en 'FRONTEND/public'
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover rounded-md"
       />
     </aside>
   );

@@ -7,12 +7,12 @@ const Footer = () => {
       <div className="container mx-auto flex justify-between items-center px-6">
         {/* Left side - Designed by */}
         <div className="text-sm text-gray-700">
-          Diseñado por Adriana y Willians
+          Diseñado por AR y WB
         </div>
 
         {/* Center - Name */}
         <div className="text-lg font-semibold text-gray-800">
-          <h1>SuperExpress</h1>
+          <h1>Gestor de Inventarios</h1>
         </div>
 
         {/* Right side - Contact button */}

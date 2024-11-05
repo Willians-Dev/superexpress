@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const Header = () => {
   return (
     <header className="bg-white border-b-4 border-[#2C35E0FF] min-h-[80px]">
-      <div className="container mx-auto flex justify-between items-center py-2 px-6">
+      <div className="container mx-auto flex justify-between items-center py-3 px-6">
         {/* Logo on the left */}
         <div className="flex items-center">
           <img src="/logo.jpg" alt="Logo" className="h-auto max-h-12 w-auto" /> {/* Nueva ruta de la imagen */}

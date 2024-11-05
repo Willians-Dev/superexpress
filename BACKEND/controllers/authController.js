@@ -29,6 +29,25 @@ export const loginUsuario = async (req, res) => {
   }
 };
 
+export const obtenerUsuarioActual = async (req, res) => {
+  try {
+    // El usuario está en req.user porque el token ha sido verificado en el middleware
+    const usuarioId = req.user.id;
+    const usuario = await Usuario.obtenerUsuarioPorId(usuarioId);
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Opcionalmente, puedes omitir ciertos campos, como la contraseña
+    const { contrasena, ...usuarioData } = usuario;
+
+    res.status(200).json(usuarioData);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Función para generar un token JWT
 const generarToken = (usuario) => {
   const payload = {

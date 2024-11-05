@@ -1,7 +1,13 @@
-// routes/usuarioRoutes.js
 import express from 'express';
-import { crearUsuario, obtenerUsuarios, obtenerUsuarioPorId, actualizarUsuario, eliminarUsuario } from '../controllers/usuarioController.js';
-import authMiddleware from '../middleware/authMiddleware.js';
+import { 
+  crearUsuario, 
+  obtenerUsuarios, 
+  obtenerUsuarioPorId, 
+  actualizarUsuario, 
+  eliminarUsuario,
+  cambiarContrasena // Importar el controlador de cambio de contraseña
+} from '../controllers/usuarioController.js';
+import authMiddleware from '../middleware/authMiddleware.js';  // Middleware de autenticación
 
 const router = express.Router();
 
@@ -19,5 +25,8 @@ router.put('/usuarios/:id', authMiddleware, actualizarUsuario);
 
 // Ruta para eliminar un usuario
 router.delete('/usuarios/:id', authMiddleware, eliminarUsuario);
+
+// Ruta para cambiar la contraseña de un usuario
+router.put('/usuarios/:id/password', authMiddleware, cambiarContrasena);  // Ruta protegida con authMiddleware
 
 export default router;

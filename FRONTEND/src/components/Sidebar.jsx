@@ -1,26 +1,31 @@
+// FRONTEND/src/components/Sidebar.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import UserInfo from './UserInfo';
+import { ButtonsInfo } from '../Types/ButtonsInfo';
 
 const Sidebar = () => {
   return (
     <div className="w-64 bg-blue-800 text-white flex flex-col h-screen p-4">
-      <h2 className="text-2xl font-bold mb-6">Panel de Control</h2>
+      <div className="flex items-center mb-4">
+        <h2 className="text-xl font-bold">Panel de Control</h2>
+      </div>
 
       {/* Enlaces del Sidebar */}
-      <nav className="flex flex-col space-y-4">
-        <Link to="/dashboard" className="hover:bg-blue-700 p-2 rounded">
-          Dashboard
-        </Link>
-        <Link to="/usuarios" className="hover:bg-blue-700 p-2 rounded">
-          Gestión de Usuarios
-        </Link>
-        <Link to="/profile" className="hover:bg-blue-700 p-2 rounded">
-          Perfil
-        </Link>
-        <Link to="/settings" className="hover:bg-blue-700 p-2 rounded">
-          Configuración
-        </Link>
+      <nav className="flex flex-col space-y-2 mb-auto">
+        {ButtonsInfo.map((button) => (
+          <Link
+            to={button.path}
+            key={button.name}
+            className="hover:bg-blue-700 px-4 py-2 rounded"
+          >
+            {button.name}
+          </Link>
+        ))}
       </nav>
+
+      {/* Información del Usuario */}
+      <UserInfo />
     </div>
   );
 };

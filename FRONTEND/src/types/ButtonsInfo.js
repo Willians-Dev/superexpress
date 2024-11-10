@@ -11,12 +11,12 @@ export const ButtonsInfo = [
       name: "Productos",
       path: "/productos",
     },
-    {
+    /*{
       name: "Perfil",
       path: "/profile",
-    },
-    {
+    },*/
+    /*{
       name: "Configuración",
       path: "/settings",
-    },
+    },*/
   ];

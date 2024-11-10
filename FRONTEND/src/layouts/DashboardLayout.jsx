@@ -5,9 +5,10 @@ import Header from '../components/Header';   // Asegúrate de la ruta correcta
 const DashboardLayout = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Se puede colocar el Header en la parte superior */}
-     
-      <div className="flex h-screen">
+      {/* Header en la parte superior */}
+      <Header />
+
+      <div className="flex flex-grow">
         {/* Sidebar en el lado izquierdo */}
         <Sidebar />
 

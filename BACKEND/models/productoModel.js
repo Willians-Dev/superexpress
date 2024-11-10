@@ -24,10 +24,16 @@ const Producto = {
   async obtenerProductos() {
     const { data, error } = await supabase
       .from('productos')
-      .select('*, categorias(nombre)'); // Obtener también la categoría
-
+      .select(`
+        *,
+        categorias (nombre)
+      `);
+  
     if (error) throw new Error(error.message);
-    return data;
+    return data.map(producto => ({
+      ...producto,
+      categoria: producto.categorias.nombre // Extrae el nombre de la categoría
+    }));
   },
 
   async obtenerProductoPorId(producto_id) {

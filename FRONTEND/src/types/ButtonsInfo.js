@@ -9,7 +9,7 @@ export const ButtonsInfo = [
     },
     {
       name: "Productos",
-      path: "/profile",
+      path: "/productos",
     },
     {
       name: "Perfil",

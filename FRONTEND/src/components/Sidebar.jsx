@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import UserInfo from './UserInfo';
-import { ButtonsInfo } from '../Types/ButtonsInfo';
+import { ButtonsInfo } from '../types/ButtonsInfo';
 
 const Sidebar = () => {
   return (

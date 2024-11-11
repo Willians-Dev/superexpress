@@ -47,12 +47,6 @@ const Dashboard = () => {
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <button
-            className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-400 transition"
-            onClick={handleLogout}
-          >
-            Cerrar Sesión
-          </button>
         </div>
 
         <table className="table-auto w-full">

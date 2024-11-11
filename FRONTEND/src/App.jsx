@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import Usuarios from './pages/Usuarios';
+import Productos from './pages/Productos';
 
 // Ruta privada que requiere autenticación
 const PrivateRoute = ({ children }) => {
@@ -26,6 +27,7 @@ const App = () => {
         {/* Rutas protegidas por autenticación */}
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/usuarios" element={<PrivateRoute><Usuarios /></PrivateRoute>} />
+        <Route path="/productos" element={<PrivateRoute><Productos /></PrivateRoute>} />
 
         {/* Ruta por defecto para manejar rutas no definidas */}
         <Route path="*" element={<Navigate to="/" />} />

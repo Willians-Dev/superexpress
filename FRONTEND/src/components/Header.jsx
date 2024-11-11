@@ -21,7 +21,7 @@ const Header = () => {
             to="/sobre-nosotros"
             className="bg-[#2C35E0FF] text-white px-4 py-2 rounded-md hover:bg-transparent hover:text-[#2C35E0FF] border border-[#2C35E0FF] transition"
           >
-            Sobre Nosotros
+            Manual de Usuario
           </Link>
         </div>
       </div>

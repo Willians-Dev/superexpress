@@ -20,6 +20,7 @@ object-cover: Hace que la imagen mantenga su proporción y ocupe todo el espacio
 
 shadow-lg: Añade una sombra al contenedor de la imagen para darle un efecto visual.
 
+
 # INFORMACIÓN SOBRE LOS CODIGOS DE BARRAS
 
 # Estándar CODE128

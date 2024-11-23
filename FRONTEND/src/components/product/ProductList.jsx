@@ -1,6 +1,6 @@
 // FRONTEND/src/components/ProductList.jsx
 import React, { useState, useEffect } from 'react';
-import Barcode from './Barcode';
+import Barcode from '../Barcode';
 
 const ProductList = () => {
   const [productos, setProductos] = useState([]);

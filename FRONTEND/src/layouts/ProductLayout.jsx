@@ -1,12 +1,13 @@
-// FRONTEND/src/layouts/ProductLayout.jsx
+// src/layouts/ProductLayout.jsx
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/product/ProductList';
 import AddProductButton from '../components/product/AddProductButton';
-import AddCategoryButton from '../components/category/AddCategoryButton';
+import CategoryList from '../components/category/CategoryList';
 
 const ProductLayout = () => {
   const [productos, setProductos] = useState([]);
+  const [activeSection, setActiveSection] = useState('productos'); // Estado para rastrear la sección activa
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -37,22 +38,47 @@ const ProductLayout = () => {
     setProductos([...productos, newProduct]);
   };
 
+  const toggleSection = (section) => {
+    setActiveSection(section);
+  };
+
   return (
     <div className="flex h-screen">
       <Sidebar /> {/* Sidebar incluido en el layout */}
       <div className="flex-1 p-6 bg-gray-100">
         <h1 className="text-2xl font-bold mb-4">Inventario de Productos</h1>
         <div className="flex gap-6 mb-6">
-          {/* Botones de agregar producto y categorías */}
-          <AddProductButton onProductAdded={handleProductAdded} />
-          <AddCategoryButton />
+          {/* Botón para alternar entre secciones */}
+          <button
+            onClick={() => toggleSection('productos')}
+            className={`px-4 py-2 rounded ${
+              activeSection === 'productos' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+            }`}
+          >
+            Productos
+          </button>
+          <button
+            onClick={() => toggleSection('categorias')}
+            className={`px-4 py-2 rounded ${
+              activeSection === 'categorias' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+            }`}
+          >
+            Categorías
+          </button>
         </div>
 
         {/* Línea separadora */}
         <hr className="border-t-2 border-gray-300 my-6" />
 
-        {/* Lista de productos */}
-        <ProductList productos={productos} />
+        {/* Secciones dinámicas */}
+        {activeSection === 'productos' && (
+          <>
+            <AddProductButton onProductAdded={handleProductAdded} />
+            <ProductList productos={productos} />
+          </>
+        )}
+
+        {activeSection === 'categorias' && <CategoryList />}
       </div>
     </div>
   );

@@ -42,14 +42,23 @@ const Categoria = {
   },
 
   async eliminarCategoria(categoria_id) {
+    console.log('ID recibido en el modelo:', categoria_id); // Log del ID
     const { data, error } = await supabase
       .from('categorias')
       .delete()
       .eq('categoria_id', categoria_id);
-
+  
+    console.log('Resultado de eliminación:', data, error);
+  
     if (error) throw new Error(error.message);
-    return data;
+  
+    if (!data || data.length === 0) {
+      throw new Error('Categoría no encontrada');
+    }
+  
+    return true;
   }
+  
 };
 
 export default Categoria;

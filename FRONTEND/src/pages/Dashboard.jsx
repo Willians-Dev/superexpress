@@ -30,8 +30,7 @@ const Dashboard = () => {
       });
   
       const data = await response.json();
-      console.log('Usuarios obtenidos:', data); // Verificar la respuesta en la consola
-  
+        
       if (response.ok) {
         setUsers(data);
       } else {

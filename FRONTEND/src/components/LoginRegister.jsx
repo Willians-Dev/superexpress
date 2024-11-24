@@ -36,7 +36,7 @@ const LoginRegister = () => {
 
         if (userResponse.ok) {
           localStorage.setItem('user', JSON.stringify(userData));
-          navigate('/dashboard');
+          navigate('/inicio');
         } else {
           setError(userData.message || 'Error al obtener los datos del usuario');
         }

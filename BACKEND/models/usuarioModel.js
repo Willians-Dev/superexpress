@@ -63,8 +63,11 @@ const Usuario = {
       .select('*')
       .eq('correo', correo)
       .single();
-    
-    if (error) throw new Error(error.message);
+  
+    if (error && error.code !== 'PGRST116') { // Código cuando no hay coincidencias
+      throw new Error(error.message);
+    }
+  
     return data;
   }
 };

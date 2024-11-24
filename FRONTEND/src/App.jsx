@@ -1,19 +1,16 @@
-import React, { useEffect } from 'react';
+// FRONTEND/src/App.jsx
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard';
+import Inicio from './pages/Inicio'; // Importa la página de inicio
 import Usuarios from './pages/Usuarios';
 import Productos from './pages/Productos';
 
-// Ruta privada que requiere autenticación
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-
-  // Si no hay token, redirigir a la página de inicio de sesión
   if (!token) {
     return <Navigate to="/" />;
   }
-
   return children;
 };
 
@@ -21,15 +18,15 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Ruta pública para la página de login */}
+        {/* Ruta pública */}
         <Route path="/" element={<LoginPage />} />
 
-        {/* Rutas protegidas por autenticación */}
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        {/* Rutas privadas */}
+        <Route path="/inicio" element={<PrivateRoute><Inicio /></PrivateRoute>} />
         <Route path="/usuarios" element={<PrivateRoute><Usuarios /></PrivateRoute>} />
         <Route path="/productos" element={<PrivateRoute><Productos /></PrivateRoute>} />
 
-        {/* Ruta por defecto para manejar rutas no definidas */}
+        {/* Ruta por defecto */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

@@ -1,7 +1,7 @@
 export const ButtonsInfo = [
     {
-      name: "Dashboard",
-      path: "/dashboard",
+      name: "Operaciones",
+      path: "/inicio",
     },
     {
       name: "Gestión de Usuarios",

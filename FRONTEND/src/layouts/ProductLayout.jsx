@@ -34,9 +34,8 @@ const ProductLayout = () => {
     fetchProductos();
   }, []);
 
-  // Manejo de productos agregados
   const handleProductAdded = (newProduct) => {
-    setProductos((prevProductos) => [...prevProductos, newProduct]); // Agrega el nuevo producto a la lista
+    setProductos((prevProductos) => [...prevProductos, newProduct]);
   };
 
   const toggleSection = (section) => {

@@ -7,7 +7,7 @@ import CategoryList from '../components/category/CategoryList';
 
 const ProductLayout = () => {
   const [productos, setProductos] = useState([]);
-  const [activeSection, setActiveSection] = useState('productos'); // Estado para rastrear la sección activa
+  const [activeSection, setActiveSection] = useState('productos');
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -34,8 +34,9 @@ const ProductLayout = () => {
     fetchProductos();
   }, []);
 
+  // Manejo de productos agregados
   const handleProductAdded = (newProduct) => {
-    setProductos([...productos, newProduct]);
+    setProductos((prevProductos) => [...prevProductos, newProduct]); // Agrega el nuevo producto a la lista
   };
 
   const toggleSection = (section) => {
@@ -44,11 +45,10 @@ const ProductLayout = () => {
 
   return (
     <div className="flex h-screen">
-      <Sidebar /> {/* Sidebar incluido en el layout */}
+      <Sidebar />
       <div className="flex-1 p-6 bg-gray-100">
         <h1 className="text-2xl font-bold mb-4">Inventario de Productos</h1>
         <div className="flex gap-6 mb-6">
-          {/* Botón para alternar entre secciones */}
           <button
             onClick={() => toggleSection('productos')}
             className={`px-4 py-2 rounded ${
@@ -67,10 +67,8 @@ const ProductLayout = () => {
           </button>
         </div>
 
-        {/* Línea separadora */}
         <hr className="border-t-2 border-gray-300 my-6" />
 
-        {/* Secciones dinámicas */}
         {activeSection === 'productos' && (
           <>
             <AddProductButton onProductAdded={handleProductAdded} />

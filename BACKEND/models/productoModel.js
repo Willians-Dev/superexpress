@@ -75,7 +75,19 @@ const Producto = {
 
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  async obtenerProductoPorCodigoBarra(codigo_barra) {
+    const { data, error } = await supabase
+      .from('productos')
+      .select('*')
+      .eq('codigo_barra', codigo_barra)
+      .single();
+  
+    if (error) throw new Error(error.message);
+    return data;
   }
+  
 };
 
 export default Producto;

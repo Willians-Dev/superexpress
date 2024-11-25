@@ -50,3 +50,14 @@ export const eliminarProducto = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const obtenerProductoPorCodigoBarra = async (req, res) => {
+  const { codigo_barra } = req.params;
+  try {
+    const data = await Producto.obtenerProductoPorCodigoBarra(codigo_barra);
+    if (!data) return res.status(404).json({ message: 'Producto no encontrado' });
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

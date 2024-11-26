@@ -1,19 +1,20 @@
+// FRONTEND/src/layouts/DashboardLayout.jsx
 import React from 'react';
-import Sidebar from '../components/Sidebar'; // Asegúrate de la ruta correcta
-import Header from '../components/Header';   // Asegúrate de la ruta correcta
+import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
 
 const DashboardLayout = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header en la parte superior */}
+      {/* Header fijo en la parte superior */}
       <Header />
 
-      <div className="flex flex-grow">
-        {/* Sidebar en el lado izquierdo */}
+      <div className="flex flex-1">
+        {/* Sidebar ajustable */}
         <Sidebar />
 
         {/* Contenido principal */}
-        <div className="flex-grow p-4 bg-gray-100">
+        <div className="flex-1 overflow-y-auto bg-gray-100">
           {children}
         </div>
       </div>

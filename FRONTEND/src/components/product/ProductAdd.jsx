@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const ProductAdd = ({ onProductAdded }) => {
   const [newProduct, setNewProduct] = useState({
     nombre: '',
-    presentacion: '',
+    presentacion_id: '',
     descripcion: '',
     codigo_barra: '',
     precio: '',
@@ -14,6 +14,7 @@ const ProductAdd = ({ onProductAdded }) => {
   });
 
   const [categorias, setCategorias] = useState([]);
+  const [presentaciones, setPresentaciones] = useState([]);
 
   // Obtener categorías desde el backend
   useEffect(() => {
@@ -40,6 +41,27 @@ const ProductAdd = ({ onProductAdded }) => {
     fetchCategorias();
   }, []);
 
+  // Obtener presentaciones desde el backend
+  useEffect(() => {
+    const fetchPresentaciones = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/presentaciones', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error('Error al obtener presentaciones');
+
+        const data = await response.json();
+        setPresentaciones(data);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchPresentaciones();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewProduct({ ...newProduct, [name]: value });
@@ -52,6 +74,7 @@ const ProductAdd = ({ onProductAdded }) => {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
+
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5000/api/productos', {
@@ -74,7 +97,7 @@ const ProductAdd = ({ onProductAdded }) => {
       // Resetear el formulario después de agregar el producto
       setNewProduct({
         nombre: '',
-        presentacion: '',
+        presentacion_id: '',
         descripcion: '',
         codigo_barra: '',
         precio: '',
@@ -98,14 +121,20 @@ const ProductAdd = ({ onProductAdded }) => {
         required
         className="border border-gray-300 p-2 rounded w-full"
       />
-      <input
-        name="presentacion"
-        placeholder="Presentación"
-        value={newProduct.presentacion}
+      <select
+        name="presentacion_id"
+        value={newProduct.presentacion_id}
         onChange={handleInputChange}
         required
         className="border border-gray-300 p-2 rounded w-full"
-      />
+      >
+        <option value="">Seleccionar Presentación</option>
+        {presentaciones.map((p) => (
+          <option key={p.presentacion_id} value={p.presentacion_id}>
+            {p.nombre}
+          </option>
+        ))}
+      </select>
       <textarea
         name="descripcion"
         placeholder="Descripción"

@@ -26,13 +26,16 @@ const Producto = {
       .from('productos')
       .select(`
         *,
-        categorias (nombre)
+        categorias (nombre),
+        presentaciones (nombre)
       `);
   
     if (error) throw new Error(error.message);
-    return data.map(producto => ({
+  
+    return data.map((producto) => ({
       ...producto,
-      categoria: producto.categorias.nombre // Extrae el nombre de la categoría
+      categoria: producto.categorias?.nombre || 'Sin Categoría',
+      presentacion: producto.presentaciones?.nombre || 'Sin Presentación',
     }));
   },
 

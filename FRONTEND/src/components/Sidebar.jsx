@@ -5,6 +5,8 @@ import UserInfo from './UserInfo';
 import { ButtonsInfo } from '../types/ButtonsInfo';
 
 const Sidebar = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
+
   return (
     <div className="w-64 bg-blue-800 text-white flex flex-col min-h-screen overflow-y-auto shadow-lg">
       {/* Encabezado */}
@@ -14,15 +16,23 @@ const Sidebar = () => {
 
       {/* Navegación */}
       <nav className="flex flex-col mt-4 space-y-2 px-4">
-        {ButtonsInfo.map((button) => (
-          <Link
-            to={button.path}
-            key={button.name}
-            className="px-4 py-2 rounded text-white hover:bg-blue-700 transition duration-200 ease-in-out"
-          >
-            {button.name}
-          </Link>
-        ))}
+        {ButtonsInfo.map((button) => {
+          // Mostrar botones solo si el rol lo permite o no tienen restricción
+          if (button.role === 'admin' && (!user || user.rol_id !== 1)) {
+            console.warn('Botón oculto para rol no autorizado');
+            return null;
+          }
+          
+          return (
+            <Link
+              to={button.path}
+              key={button.name}
+              className="px-4 py-2 rounded text-white hover:bg-blue-700 transition duration-200 ease-in-out"
+            >
+              {button.name}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Información del usuario */}

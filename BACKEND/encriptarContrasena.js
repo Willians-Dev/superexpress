@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 
 const encriptarContrasena = async () => {
     const salRounds = 10;
-    const contrasenaTextoPlano = 'Prueba789';
+    const contrasenaTextoPlano = 'Pruebas321';
 
     try {
         const hashedPassword = await bcrypt.hash(contrasenaTextoPlano, salRounds);

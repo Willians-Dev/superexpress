@@ -1,6 +1,5 @@
 // src/layouts/ProductLayout.jsx
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
 import ProductList from '../components/product/ProductList';
 import AddProductButton from '../components/product/AddProductButton';
 import CategoryList from '../components/category/CategoryList';

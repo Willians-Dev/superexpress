@@ -1,48 +1,105 @@
-//FRONTEND\src\layouts\OperationLayout.jsx
-import React, { useState } from 'react';
-import ProductScanner from '../components/product/ProductScanner';
-import ScannedProductList from '../components/product/ScannedProductList';
+import React, { useState } from "react";
+import ProductScanner from "../components/product/ProductScanner";
+import ScannedProductList from "../components/product/ScannedProductList";
 
 const OperationLayout = () => {
   const [scannedProducts, setScannedProducts] = useState([]);
+  const [error, setError] = useState("");
 
   // Agregar un producto escaneado a la lista
   const handleAddProduct = (product) => {
-    setScannedProducts((prevProducts) => [...prevProducts, product]);
+    const existingProduct = scannedProducts.find(
+      (p) => p.producto_id === product.producto_id
+    );
+
+    if (existingProduct) {
+      // Incrementa la cantidad del producto existente
+      setScannedProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          p.producto_id === product.producto_id
+            ? { ...p, cantidad: p.cantidad + 1 }
+            : p
+        )
+      );
+    } else {
+      // Agrega un nuevo producto con cantidad 1
+      setScannedProducts([...scannedProducts, { ...product, cantidad: 1 }]);
+    }
+
+    setError("");
   };
 
   // Finalizar venta y reiniciar la lista
   const handleFinalizeSale = () => {
     setScannedProducts([]);
+    alert("Venta finalizada con éxito.");
   };
 
   return (
-    <div className="grid grid-cols-12 gap-4 h-full p-6 bg-gray-100">
-      {/* Div horizontal superior izquierda */}
-      <div className="col-span-6 bg-white shadow-md rounded-md p-4">
-        <h2 className="text-lg font-bold mb-4">Escanear Productos</h2>
-        <ProductScanner onProductScanned={handleAddProduct} />
-      </div>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">Operaciones</h1>
 
-      {/* Div horizontal superior derecha */}
-      <div className="col-span-6 bg-white shadow-md rounded-md p-4">
-        <h2 className="text-lg font-bold mb-4">Información Adicional</h2>
-        <p className="text-gray-500">Aquí puedes mostrar información relacionada o adicional.</p>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Escanear productos */}
+        <div className="lg:col-span-6 bg-white shadow-md rounded-md p-6">
+          <h2 className="text-xl font-bold mb-4">Escanear Productos</h2>
+          <ProductScanner
+            onProductScanned={handleAddProduct}
+            setError={setError}
+          />
+          {error && <p className="text-red-500 mt-4">{error}</p>}
+        </div>
 
-      {/* Div vertical inferior arriba */}
-      <div className="col-span-12 bg-white shadow-md rounded-md p-4">
-        <h2 className="text-lg font-bold mb-4">Lista de Productos Escaneados</h2>
-        <ScannedProductList
-          products={scannedProducts}
-          onFinalizeSale={handleFinalizeSale}
-        />
-      </div>
+        {/* Información adicional */}
+        <div className="lg:col-span-6 bg-white shadow-md rounded-md p-6">
+          <h2 className="text-xl font-bold mb-4">Información Adicional</h2>
+          <p className="text-gray-500">
+            Aquí puedes mostrar estadísticas rápidas o instrucciones para el
+            usuario.
+          </p>
+        </div>
 
-      {/* Div vertical inferior abajo */}
-      <div className="col-span-12 bg-white shadow-md rounded-md p-4">
-        <h2 className="text-lg font-bold mb-4">Resumen de Venta</h2>
-        <p className="text-gray-500">Aquí puedes agregar un resumen de las ventas.</p>
+        {/* Lista de productos escaneados */}
+        <div className="lg:col-span-8 bg-white shadow-md rounded-md p-6">
+          <h2 className="text-xl font-bold mb-4">Productos Escaneados</h2>
+          <ScannedProductList
+            products={scannedProducts}
+            onFinalizeSale={handleFinalizeSale}
+          />
+        </div>
+
+        {/* Resumen de la venta */}
+        <div className="lg:col-span-4 bg-white shadow-md rounded-md p-6">
+          <h2 className="text-xl font-bold mb-4">Resumen de la Venta</h2>
+          <p className="text-gray-800 text-lg">
+            Total productos:{" "}
+            <span className="font-bold">
+              {scannedProducts.reduce(
+                (total, product) => total + product.cantidad,
+                0
+              )}
+            </span>
+          </p>
+          <p className="text-gray-800 text-lg">
+            Total a pagar:{" "}
+            <span className="font-bold">
+              $
+              {scannedProducts
+                .reduce(
+                  (total, product) =>
+                    total + product.cantidad * product.precio,
+                  0
+                )
+                .toFixed(2)}
+            </span>
+          </p>
+          <button
+            onClick={handleFinalizeSale}
+            className="w-full mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Finalizar Venta
+          </button>
+        </div>
       </div>
     </div>
   );

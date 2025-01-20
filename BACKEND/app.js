@@ -7,6 +7,8 @@ import rolRoutes from './routes/rolRoutes.js';  // Importar las rutas de roles
 import productoRoutes from './routes/productoRoutes.js';  // Importar las rutas de productos
 import inventarioRoutes from './routes/inventarioRoutes.js';  // Importar las rutas de inventario
 import categoriaRoutes from './routes/categoriaRoutes.js'
+import ventaRoutes from './routes/ventaRoutes.js';
+import presentacionRoutes from './routes/presentacionRoutes.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -23,6 +25,8 @@ app.use('/api', rolRoutes);  // Usar las rutas de roles
 app.use('/api', productoRoutes);  // Usar las rutas de productos
 app.use('/api', inventarioRoutes);  // Usar las rutas de inventario
 app.use('/api', categoriaRoutes);  // Usar las rutas de categorías
+app.use('/api', ventaRoutes); // Ruta para la ventas
+app.use('/api', presentacionRoutes);
 
 // Inicializar el servidor
 const PORT = process.env.PORT || 5000;

@@ -1,58 +1,59 @@
-// FRONTEND/src/layouts/ProductLayout.jsx
-import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
+// src/layouts/ProductLayout.jsx
+import React, { useState } from 'react';
 import ProductList from '../components/product/ProductList';
 import AddProductButton from '../components/product/AddProductButton';
-import AddCategoryButton from '../components/category/AddCategoryButton';
+import CategoryList from '../components/category/CategoryList';
+import PresentacionList from '../components/presentation/PresentacionList';
 
 const ProductLayout = () => {
-  const [productos, setProductos] = useState([]);
+  const [activeSection, setActiveSection] = useState('productos');
 
-  useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/productos', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Error al obtener productos: ${response.status} - ${errorText}`);
-        }
-
-        const data = await response.json();
-        setProductos(data);
-      } catch (error) {
-        console.error('Error al obtener productos:', error);
-      }
-    };
-
-    fetchProductos();
-  }, []);
-
-  const handleProductAdded = (newProduct) => {
-    setProductos([...productos, newProduct]);
+  const toggleSection = (section) => {
+    setActiveSection(section);
   };
 
   return (
-    <div className="flex h-screen">
-      <Sidebar /> {/* Sidebar incluido en el layout */}
-      <div className="flex-1 p-6 bg-gray-100">
-        <h1 className="text-2xl font-bold mb-4">Inventario de Productos</h1>
+    <div className="flex min-h-screen"> {/* Asegura altura mínima igual a la pantalla */}
+      <div className="flex-1 p-6 bg-gray-100 overflow-y-auto"> {/* Permite scroll vertical */}
+        <h1 className="text-2xl font-bold mb-4">Gestión de Productos</h1>
         <div className="flex gap-6 mb-6">
-          {/* Botones de agregar producto y categorías */}
-          <AddProductButton onProductAdded={handleProductAdded} />
-          <AddCategoryButton />
+          <button
+            onClick={() => toggleSection('productos')}
+            className={`px-4 py-2 rounded ${
+              activeSection === 'productos' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+            }`}
+          >
+            Productos
+          </button>
+          <button
+            onClick={() => toggleSection('categorias')}
+            className={`px-4 py-2 rounded ${
+              activeSection === 'categorias' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+            }`}
+          >
+            Categorías
+          </button>
+          <button
+            onClick={() => toggleSection('presentaciones')}
+            className={`px-4 py-2 rounded ${
+              activeSection === 'presentaciones' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+            }`}
+          >
+            Presentaciones
+          </button>
         </div>
 
-        {/* Línea separadora */}
         <hr className="border-t-2 border-gray-300 my-6" />
 
-        {/* Lista de productos */}
-        <ProductList productos={productos} />
+        {/* Secciones dinámicas */}
+        {activeSection === 'productos' && (
+          <>
+            <AddProductButton />
+            <ProductList />
+          </>
+        )}
+        {activeSection === 'categorias' && <CategoryList />}
+        {activeSection === 'presentaciones' && <PresentacionList />}
       </div>
     </div>
   );

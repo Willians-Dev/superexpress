@@ -58,15 +58,25 @@ const Usuario = {
 
   // Función para obtener un usuario por correo electrónico
   async obtenerUsuarioPorCorreo(correo) {
+    console.log("Buscando usuario con correo:", correo); // Depuración
     const { data, error } = await supabase
       .from('usuarios')
       .select('*')
       .eq('correo', correo)
       .single();
-    
-    if (error) throw new Error(error.message);
+  
+    if (error) {
+      console.error("Error en obtenerUsuarioPorCorreo:", error.message); // Depuración
+      if (error.code === 'PGRST116') {
+        return null; // Usuario no encontrado
+      }
+      throw new Error(error.message);
+    }
+  
+    console.log("Usuario encontrado:", data); // Depuración
     return data;
-  }
+  } 
+
 };
 
 export default Usuario;

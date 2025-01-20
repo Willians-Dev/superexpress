@@ -26,13 +26,16 @@ const Producto = {
       .from('productos')
       .select(`
         *,
-        categorias (nombre)
+        categorias (nombre),
+        presentaciones (nombre)
       `);
   
     if (error) throw new Error(error.message);
-    return data.map(producto => ({
+  
+    return data.map((producto) => ({
       ...producto,
-      categoria: producto.categorias.nombre // Extrae el nombre de la categoría
+      categoria: producto.categorias?.nombre || 'Sin Categoría',
+      presentacion: producto.presentaciones?.nombre || 'Sin Presentación',
     }));
   },
 
@@ -75,7 +78,19 @@ const Producto = {
 
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  async obtenerProductoPorCodigoBarra(codigo_barra) {
+    const { data, error } = await supabase
+      .from('productos')
+      .select('*')
+      .eq('codigo_barra', codigo_barra)
+      .single();
+  
+    if (error) throw new Error(error.message);
+    return data;
   }
+  
 };
 
 export default Producto;

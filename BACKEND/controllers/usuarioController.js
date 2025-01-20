@@ -3,20 +3,65 @@ import Usuario from '../models/usuarioModel.js';
 import bcrypt from 'bcrypt';
 
 export const crearUsuario = async (req, res) => {
+  const { nombre, apellido, correo, contrasena, rol_id } = req.body;
+
+  // Validaciones de campos requeridos
+  if (!nombre || !apellido || !correo || !contrasena || !rol_id) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+  }
+
+  // Validar formato del correo
+  if (!/\S+@\S+\.\S+/.test(correo)) {
+    return res.status(400).json({ message: 'Correo no válido' });
+  }
+
+  // Validar longitud mínima de la contraseña
+  if (contrasena.length < 8) {
+    return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+  }
+
   try {
-    const data = await Usuario.crearUsuario(req.body);
-    res.status(201).json(data);
+    // Verificar si el correo ya está registrado
+    const usuarioExistente = await Usuario.obtenerUsuarioPorCorreo(correo);
+    if (usuarioExistente) {
+      return res.status(400).json({ message: 'El correo ya está registrado' });
+    }
+
+    // Encriptar la contraseña
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+
+    // Crear el usuario
+    const nuevoUsuario = {
+      nombre,
+      apellido,
+      correo,
+      contrasena: hashedPassword,
+      rol_id,
+    };
+
+    const data = await Usuario.crearUsuario(nuevoUsuario);
+
+    // Excluir contraseña antes de enviar la respuesta
+    const { contrasena: omit, ...usuarioSinPassword } = data;
+    res.status(201).json(usuarioSinPassword);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error al crear usuario:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
 export const obtenerUsuarios = async (req, res) => {
   try {
     const data = await Usuario.obtenerUsuarios();
-    res.status(200).json(data);
+
+    // Excluir contraseñas de los usuarios antes de enviarlos al frontend
+    const usuariosSinContrasena = data.map(({ contrasena, ...usuario }) => usuario);
+
+    res.status(200).json(usuariosSinContrasena);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
@@ -43,35 +88,64 @@ export const actualizarUsuario = async (req, res) => {
 
 export const eliminarUsuario = async (req, res) => {
   const { id } = req.params;
+
   try {
+    const usuarioExistente = await Usuario.obtenerUsuarioPorId(id);
+
+    if (!usuarioExistente) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
     const data = await Usuario.eliminarUsuario(id);
-    if (!data) return res.status(404).json({ message: "Usuario no encontrado" });
-    res.status(200).json({ message: "Usuario eliminado exitosamente" });
+
+    if (!data) {
+      return res.status(500).json({ message: 'Error al eliminar el usuario' });
+    }
+
+    res.status(200).json({ message: 'Usuario eliminado exitosamente' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error al eliminar usuario:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
 
 // Controlador para cambiar la contraseña del usuario
 export const cambiarContrasena = async (req, res) => {
-  const { id } = req.params;  // Obtener el ID del usuario desde los parámetros de la URL
-  const { contrasena } = req.body;  // Obtener la nueva contraseña desde el cuerpo de la solicitud
+  const { contrasenaActual, nuevaContrasena } = req.body;
+  const { id } = req.user; // ID del usuario autenticado
+
+  if (!contrasenaActual || !nuevaContrasena) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+  }
+
+  if (nuevaContrasena.length < 8) {
+    return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+  }
 
   try {
-    // Verificar si se recibió una nueva contraseña
-    if (!contrasena) {
-      return res.status(400).json({ message: 'Se requiere una nueva contraseña.' });
+    // Obtener datos del usuario autenticado
+    const usuario = await Usuario.obtenerUsuarioPorId(id);
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
 
-    // Generar un salt y encriptar la nueva contraseña
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+    // Verificar si la contraseña actual es correcta
+    const passwordMatch = await bcrypt.compare(contrasenaActual, usuario.contrasena);
+
+    if (!passwordMatch) {
+      return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
 
     // Actualizar la contraseña en la base de datos
-    const data = await Usuario.actualizarUsuario(id, { contrasena: hashedPassword });
+    await Usuario.actualizarUsuario(id, { contrasena: hashedPassword });
 
-    res.status(200).json({ message: 'Contraseña actualizada correctamente', data });
+    return res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error al cambiar contraseña:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
   }
 };

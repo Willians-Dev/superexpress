@@ -1,4 +1,4 @@
-// FRONTEND/src/components/LoginRegister.jsx
+//FRONTEND\src\components\login\LoginRegister.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -15,36 +15,34 @@ const LoginRegister = () => {
     }
 
     try {
-      // Paso 1: Solicitud de inicio de sesión
+      console.log('Datos enviados al servidor:', { correo: email, contrasena: password });
+
       const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo: email, contrasena: password }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error al iniciar sesión:', errorData.message);
+        setError(errorData.message || 'Credenciales incorrectas');
+        return;
+      }
+
       const data = await response.json();
 
-      if (response.ok) {
-        // Almacena el token
-        localStorage.setItem('token', data.token);
-
-        // Paso 2: Solicitud para obtener los datos del usuario
-        const userResponse = await fetch('http://localhost:5000/api/usuario', {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${data.token}` },
-        });
-        const userData = await userResponse.json();
-
-        if (userResponse.ok) {
-          localStorage.setItem('user', JSON.stringify(userData));
-          navigate('/dashboard');
-        } else {
-          setError(userData.message || 'Error al obtener los datos del usuario');
-        }
+      if (data.token && data.user) {
+        console.log('Respuesta del servidor:', data);
+        localStorage.setItem('token', data.token); // Guardar token en localStorage
+        localStorage.setItem('user', JSON.stringify(data.user)); // Guardar datos del usuario
+        navigate('/inicio'); // Redirigir al inicio
       } else {
-        setError(data.message || 'Error al iniciar sesión');
+        setError('Respuesta inesperada del servidor');
       }
     } catch (error) {
-      setError('Error al iniciar sesión');
+      console.error('Error al conectar con el servidor:', error);
+      setError('No se pudo conectar con el servidor. Inténtalo más tarde.');
     }
   };
 

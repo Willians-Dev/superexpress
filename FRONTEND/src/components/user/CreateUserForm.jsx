@@ -1,79 +1,67 @@
-//FRONTEND\src\components\user\CreateUserForm.jsx
-import React, { useState } from 'react';
+import React from "react";
 
-const CreateUserForm = ({ newUser, setNewUser, roles, handleCreateUser }) => {
-  const [errors, setErrors] = useState({});
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!newUser.nombre.trim()) newErrors.nombre = 'El nombre es obligatorio';
-    if (!newUser.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio';
-    if (!newUser.correo.trim() || !/\S+@\S+\.\S+/.test(newUser.correo))
-      newErrors.correo = 'Debe ser un correo válido';
-    if (!newUser.contrasena.trim()) newErrors.contrasena = 'La contraseña es obligatoria';
-    if (!newUser.rol_id) newErrors.rol_id = 'Debe seleccionar un rol';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      handleCreateUser();
-    }
+const CreateUserForm = ({ newUser, setNewUser, roles, handleCreateUser, children }) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <input
-            type="text"
-            value={newUser.nombre}
-            onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })}
-            placeholder="Nombre"
-            className="border rounded px-4 py-2 w-full"
-          />
-          {errors.nombre && <p className="text-red-500 text-sm">{errors.nombre}</p>}
-        </div>
-        <div>
-          <input
-            type="text"
-            value={newUser.apellido}
-            onChange={(e) => setNewUser({ ...newUser, apellido: e.target.value })}
-            placeholder="Apellido"
-            className="border rounded px-4 py-2 w-full"
-          />
-          {errors.apellido && <p className="text-red-500 text-sm">{errors.apellido}</p>}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <input
-            type="email"
-            value={newUser.correo}
-            onChange={(e) => setNewUser({ ...newUser, correo: e.target.value })}
-            placeholder="Correo"
-            className="border rounded px-4 py-2 w-full"
-          />
-          {errors.correo && <p className="text-red-500 text-sm">{errors.correo}</p>}
-        </div>
-        <div>
-          <input
-            type="password"
-            value={newUser.contrasena}
-            onChange={(e) => setNewUser({ ...newUser, contrasena: e.target.value })}
-            placeholder="Contraseña"
-            className="border rounded px-4 py-2 w-full"
-          />
-          {errors.contrasena && <p className="text-red-500 text-sm">{errors.contrasena}</p>}
-        </div>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleCreateUser();
+      }}
+      className="space-y-4 bg-white p-6 rounded shadow-md"
+    >
+      <h2 className="text-xl font-bold">Crear Usuario</h2>
+      <div>
+        <label className="block text-sm font-bold mb-2">Nombre</label>
+        <input
+          type="text"
+          name="nombre"
+          value={newUser.nombre}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
       </div>
       <div>
+        <label className="block text-sm font-bold mb-2">Apellido</label>
+        <input
+          type="text"
+          name="apellido"
+          value={newUser.apellido}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-bold mb-2">Correo</label>
+        <input
+          type="email"
+          name="correo"
+          value={newUser.correo}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-bold mb-2">Contraseña</label>
+        <input
+          type="password"
+          name="contrasena"
+          value={newUser.contrasena}
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-bold mb-2">Rol</label>
         <select
+          name="rol_id"
           value={newUser.rol_id}
-          onChange={(e) => setNewUser({ ...newUser, rol_id: e.target.value })}
-          className="border rounded px-4 py-2 w-full"
+          onChange={handleChange}
+          className="w-full p-2 border rounded"
         >
           <option value="">Seleccione un rol</option>
           {roles.map((rol) => (
@@ -82,14 +70,16 @@ const CreateUserForm = ({ newUser, setNewUser, roles, handleCreateUser }) => {
             </option>
           ))}
         </select>
-        {errors.rol_id && <p className="text-red-500 text-sm">{errors.rol_id}</p>}
       </div>
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-      >
-        Crear Usuario
-      </button>
+      <div className="flex justify-end space-x-2">
+        {children}
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Guardar
+        </button>
+      </div>
     </form>
   );
 };

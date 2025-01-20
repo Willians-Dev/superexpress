@@ -21,7 +21,7 @@ const Notification = ({ type = "info", message, onClose }) => {
         {onClose && (
           <button
             onClick={onClose}
-            className="text-lg font-bold ml-4"
+            className="text-lg font-bold ml-4 hover:text-gray-700"
           >
             ×
           </button>

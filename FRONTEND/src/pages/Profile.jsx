@@ -1,12 +1,11 @@
-// FRONTEND/src/pages/Perfil.jsx
-import React from 'react';
-import DashboardLayout from '../layouts/DashboardLayout';
-import UserProfile from '../components/user/UserProfile';
+import React from "react";
+import DashboardLayout from "../layouts/DashboardLayout";
+import ProfileLayout from "../layouts/ProfileLayout";
 
 const Profile = () => {
   return (
     <DashboardLayout>
-      <UserProfile />
+      <ProfileLayout />
     </DashboardLayout>
   );
 };

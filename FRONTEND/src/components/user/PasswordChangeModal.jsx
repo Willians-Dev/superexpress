@@ -1,3 +1,4 @@
+//FRONTEND\src\components\user\PasswordChangeModal.jsx
 import React from 'react';
 
 const PasswordChangeModal = ({ user, password, setPassword, handleChangePassword, onClose }) => (

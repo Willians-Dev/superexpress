@@ -1,79 +1,98 @@
-// FRONTEND/src/components/user/UserProfile.jsx
+//FRONTEND\src\components\user\UserProfile.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const UserProfile = () => {
-  const [user, setUser] = useState(null);
   const [newPassword, setNewPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    setUser(userData);
-  }, []);
+    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+
+    if (!token || !userData) {
+      console.warn('Sesión no encontrada. Redirigiendo al login...');
+      navigate('/');
+    } else {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error al analizar datos del usuario:', error);
+        localStorage.removeItem('user');
+        navigate('/');
+      }
+    }
+  }, [navigate]);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!newPassword || !confirmPassword) {
-      setError('Por favor, completa ambos campos.');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setError('Por favor, completa todos los campos.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError('Las nuevas contraseñas no coinciden.');
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/usuarios/${user.usuario_id}/password`, {
+      const response = await fetch('http://localhost:5000/api/usuarios/cambiar-password', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password: newPassword }),
+        body: JSON.stringify({
+          contrasenaActual: currentPassword,
+          nuevaContrasena: newPassword,
+        }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Error al cambiar la contraseña.');
+        throw new Error(data.message || 'Error al cambiar la contraseña.');
       }
 
-      setSuccess('Contraseña actualizada con éxito.');
+      setSuccess(data.message || 'Contraseña cambiada con éxito.');
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (error) {
-      setError('Hubo un error al cambiar la contraseña.');
+      setError(error.message || 'Hubo un error al cambiar la contraseña.');
     }
   };
 
   if (!user) {
-    return <p>Cargando...</p>;
+    return <p>Cargando datos...</p>;
   }
 
   return (
     <div className="bg-white p-6 rounded-md shadow-md w-full max-w-lg mx-auto">
-      <h2 className="text-xl font-bold mb-4">Perfil del Usuario</h2>
-      <div className="space-y-4">
+      <h2 className="text-xl font-bold mb-4">Cambiar Contraseña</h2>
+      <p className="text-gray-800 font-medium mb-4">Usuario: {user.nombre} {user.apellido}</p>
+      <form onSubmit={handlePasswordChange} className="space-y-4">
         <div>
-          <label className="block text-gray-600">Nombre</label>
-          <p className="text-gray-800 font-medium">{user.nombre}</p>
+          <label htmlFor="currentPassword" className="block text-gray-600">Contraseña Actual</label>
+          <input
+            type="password"
+            id="currentPassword"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="border rounded w-full p-2"
+            required
+          />
         </div>
-        <div>
-          <label className="block text-gray-600">Apellido</label>
-          <p className="text-gray-800 font-medium">{user.apellido}</p>
-        </div>
-        <div>
-          <label className="block text-gray-600">Correo Electrónico</label>
-          <p className="text-gray-800 font-medium">{user.correo}</p>
-        </div>
-      </div>
-
-      <form onSubmit={handlePasswordChange} className="mt-6 space-y-4">
         <div>
           <label htmlFor="newPassword" className="block text-gray-600">Nueva Contraseña</label>
           <input
@@ -86,7 +105,7 @@ const UserProfile = () => {
           />
         </div>
         <div>
-          <label htmlFor="confirmPassword" className="block text-gray-600">Confirmar Contraseña</label>
+          <label htmlFor="confirmPassword" className="block text-gray-600">Confirmar Nueva Contraseña</label>
           <input
             type="password"
             id="confirmPassword"
@@ -98,10 +117,7 @@ const UserProfile = () => {
         </div>
         {error && <p className="text-red-500">{error}</p>}
         {success && <p className="text-green-500">{success}</p>}
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
           Cambiar Contraseña
         </button>
       </form>

@@ -1,3 +1,4 @@
+//FRONTEND\src\components\product\ScannedProductList.jsx
 import React from 'react';
 
 const ScannedProductList = ({ products, onFinalizeSale }) => {

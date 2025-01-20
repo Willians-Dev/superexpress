@@ -111,26 +111,41 @@ export const eliminarUsuario = async (req, res) => {
 
 // Controlador para cambiar la contraseña del usuario
 export const cambiarContrasena = async (req, res) => {
-  const { id } = req.params;
-  const { contrasena } = req.body;
+  const { contrasenaActual, nuevaContrasena } = req.body;
+  const { id } = req.user; // ID del usuario autenticado
 
-  if (!contrasena || contrasena.length < 8) {
+  if (!contrasenaActual || !nuevaContrasena) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+  }
+
+  if (nuevaContrasena.length < 8) {
     return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
   }
 
   try {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(contrasena, saltRounds);
+    // Obtener datos del usuario autenticado
+    const usuario = await Usuario.obtenerUsuarioPorId(id);
 
-    const data = await Usuario.actualizarUsuario(id, { contrasena: hashedPassword });
-
-    if (!data) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
 
-    res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+    // Verificar si la contraseña actual es correcta
+    const passwordMatch = await bcrypt.compare(contrasenaActual, usuario.contrasena);
+
+    if (!passwordMatch) {
+      return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
+    }
+
+    // Encriptar la nueva contraseña
+    const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+
+    // Actualizar la contraseña en la base de datos
+    await Usuario.actualizarUsuario(id, { contrasena: hashedPassword });
+
+    return res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
   } catch (error) {
     console.error('Error al cambiar contraseña:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    return res.status(500).json({ message: 'Error interno del servidor.' });
   }
 };

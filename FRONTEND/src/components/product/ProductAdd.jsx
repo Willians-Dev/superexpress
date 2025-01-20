@@ -1,3 +1,4 @@
+//FRONTEND\src\components\product\ProductAdd.jsx
 import React, { useState, useEffect } from 'react';
 
 const ProductAdd = ({ onProductAdded }) => {

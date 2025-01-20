@@ -1,3 +1,4 @@
+//FRONTEND\src\components\category\CategoryList.jsx
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../ConfirmationModal';
 import CategoryForm from './CategoryForm';

@@ -1,3 +1,4 @@
+//FRONTEND\src\components\category\CategoryForm.jsx
 import React from 'react';
 
 const CategoryForm = ({ newCategory, editingCategory, onChange, onSubmit, onCancel }) => (

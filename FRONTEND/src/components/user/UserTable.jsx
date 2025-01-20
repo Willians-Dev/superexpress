@@ -1,3 +1,4 @@
+//FRONTEND\src\components\user\UserTable.jsx
 import React from 'react';
 
 const UserTable = ({ users, roles, handleRoleChange, handleSave, handleDelete, handlePasswordChange }) => (

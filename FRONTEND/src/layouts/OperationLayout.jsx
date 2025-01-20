@@ -1,3 +1,4 @@
+//FRONTEND\src\layouts\OperationLayout.jsx
 import React, { useState } from 'react';
 import ProductScanner from '../components/product/ProductScanner';
 import ScannedProductList from '../components/product/ScannedProductList';

@@ -1,3 +1,4 @@
+//FRONTEND\src\components\product\ProductScanner.jsx
 import React, { useState } from 'react';
 
 const ProductScanner = ({ onProductScanned }) => {

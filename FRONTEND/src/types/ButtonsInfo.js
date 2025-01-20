@@ -1,9 +1,8 @@
-// FRONTEND/src/types/ButtonsInfo.js
 export const ButtonsInfo = [
-  { name: 'Operaciones', path: '/operaciones' },
-  { name: 'Productos', path: '/productos' },
-  { name: 'Inventario', path: '/inventario' },
-  { name: 'Reportes', path: '/reportes' },
-  { name: 'Gestión de Usuarios', path: '/gestion-usuarios', role: 'admin' },
-  { name: 'Perfil', path: '/perfil' },
+  { name: 'Operaciones', path: '/inicio', allowedRoles: [1, 2] }, // Admin y Usuarios
+  { name: 'Productos', path: '/productos', allowedRoles: [1, 2] },
+  { name: 'Inventario', path: '/inventario', allowedRoles: [1] }, // Solo admin
+  { name: 'Reportes', path: '/reportes', allowedRoles: [1, 2] }, // Admin y Usuarios
+  { name: 'Gestión de Usuarios', path: '/usuarios', allowedRoles: [1] }, // Solo admin
+  { name: 'Perfil', path: '/perfil' }, // Accesible por todos
 ];

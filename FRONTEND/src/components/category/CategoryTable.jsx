@@ -1,3 +1,4 @@
+//FRONTEND\src\components\category\CategoryTable.jsx
 import React from 'react';
 
 const CategoryTable = ({ categories, onEdit, onDelete }) => (

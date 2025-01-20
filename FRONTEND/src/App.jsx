@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import Inventario from "./pages/Inventario"; // Nueva página de Inventario
 import Unauthorized from "./pages/Unauthorized";
 import PrivateRoute from "./components/PrivateRoute";
+import Reportes from './pages/Reportes';
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
         <Route path="/usuarios" element={<PrivateRoute requiredRole={1}><Usuarios /></PrivateRoute>} />
         <Route path="/productos" element={<PrivateRoute><Productos /></PrivateRoute>} />
         <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} /> {/* Nueva ruta */}
+        <Route path="/reportes" element={<PrivateRoute><Reportes /></PrivateRoute>} />
         <Route path="/perfil" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/no-autorizado" element={<Unauthorized />} />
         <Route path="*" element={<Navigate to="/" />} />

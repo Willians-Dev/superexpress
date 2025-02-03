@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserTable from "../components/user/UserTable";
-import CreateUserForm from "../components/user/CreateUserForm"; // ✅ Asegurando la importación
+import CreateUserForm from "../components/user/CreateUserForm";
 import ChangePasswordForm from "../components/common/ChangePasswordForm.jsx";
 import Notification from "../components/common/Notification";
-import ConfirmationModal from "../components/ConfirmationModal"; // ✅ Modal de confirmación
+import ConfirmationModal from "../components/common/ConfirmationModal";
 
 const UserLayout = () => {
   const [users, setUsers] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [editingPasswordUser, setEditingPasswordUser] = useState(null);
-  const [userToDelete, setUserToDelete] = useState(null); // ✅ Estado para la confirmación
+  const [userToDelete, setUserToDelete] = useState(null);
   const [newUser, setNewUser] = useState({
     nombre: "",
     apellido: "",
@@ -45,59 +45,12 @@ const UserLayout = () => {
     fetchUsers();
   }, []);
 
-  const handleCreateUser = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch("http://localhost:5000/api/usuarios", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newUser),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al guardar el usuario.");
-      }
-
-      setNotification({ message: "Usuario creado exitosamente.", type: "success" });
-      setShowCreateForm(false);
-      setNewUser({ nombre: "", apellido: "", correo: "", contrasena: "", rol_id: "" });
-      fetchUsers();
-    } catch (error) {
-      setNotification({ message: error.message, type: "error" });
-    }
-  };
-
-  const handleEditUserSubmit = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch(`http://localhost:5000/api/usuarios/${editingUser.usuario_id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editingUser),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al actualizar el usuario.");
-      }
-
-      setNotification({ message: "Usuario actualizado exitosamente.", type: "success" });
-      setEditingUser(null);
-      fetchUsers();
-    } catch (error) {
-      setNotification({ message: error.message, type: "error" });
-    }
-  };
-
   const handleDeleteUser = async () => {
-    if (!userToDelete) return; // No continuar si no hay usuario seleccionado
+    if (!userToDelete || !userToDelete.usuario_id) {
+      setNotification({ message: "Error: Usuario no válido para eliminar.", type: "error" });
+      setUserToDelete(null);
+      return;
+    }
 
     const token = localStorage.getItem("token");
     try {
@@ -112,44 +65,11 @@ const UserLayout = () => {
       }
 
       setNotification({ message: "Usuario eliminado exitosamente.", type: "success" });
-      fetchUsers();
+      fetchUsers(); 
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
     } finally {
-      setUserToDelete(null); // Cerrar modal después de eliminar
-    }
-  };
-
-  const handlePasswordSubmit = async ({ currentPassword, newPassword, userId }) => {
-    const token = localStorage.getItem("token");
-
-    const isAdminChangingPassword = !currentPassword; // Si no hay contraseña actual, es un admin
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/usuarios/${userId}/cambiar-password`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(
-          isAdminChangingPassword
-            ? { nuevaContrasena: newPassword } // Solo para admins
-            : { contrasenaActual: currentPassword, nuevaContrasena: newPassword } // Para usuario normal
-        ),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Error al cambiar la contraseña.");
-      }
-
-      setNotification({ message: "Contraseña cambiada con éxito.", type: "success" });
-      setEditingPasswordUser(null);
-      navigate("/usuarios");
-    } catch (error) {
-      setNotification({ message: error.message, type: "error" });
+      setUserToDelete(null);
     }
   };
 
@@ -178,8 +98,14 @@ const UserLayout = () => {
         <CreateUserForm
           newUser={newUser}
           setNewUser={setNewUser}
-          roles={[{ rol_id: 1, rol_nombre: "Administrador" }, { rol_id: 2, rol_nombre: "Usuario" }]}
-          handleCreateUser={handleCreateUser}
+          roles={[
+            { rol_id: 1, rol_nombre: "Administrador" },
+            { rol_id: 2, rol_nombre: "Usuario" },
+          ]}
+          handleCreateUser={() => {
+            handleCreateUser();
+            setShowCreateForm(false);
+          }}
         >
           <button
             type="button"
@@ -195,8 +121,14 @@ const UserLayout = () => {
         <CreateUserForm
           newUser={editingUser}
           setNewUser={setEditingUser}
-          roles={[{ rol_id: 1, rol_nombre: "Administrador" }, { rol_id: 2, rol_nombre: "Usuario" }]}
-          handleCreateUser={handleEditUserSubmit}
+          roles={[
+            { rol_id: 1, rol_nombre: "Administrador" },
+            { rol_id: 2, rol_nombre: "Usuario" },
+          ]}
+          handleCreateUser={() => {
+            handleEditUserSubmit();
+            setEditingUser(null);
+          }}
         >
           <button
             type="button"
@@ -211,7 +143,7 @@ const UserLayout = () => {
       {!showCreateForm && !editingUser && !editingPasswordUser && (
         <UserTable
           users={users}
-          onDelete={(user) => setUserToDelete(user)} // ✅ Mostrar confirmación antes de eliminar
+          onDelete={(user) => setUserToDelete(user)} 
           onEdit={(user) => setEditingUser(user)}
           onEditPassword={(user) => setEditingPasswordUser(user)}
         />

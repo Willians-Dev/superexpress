@@ -1,3 +1,4 @@
+// FRONTEND/src/components/user/UserTable.jsx
 import React from "react";
 
 const UserTable = ({ users, onDelete, onEdit, onEditPassword }) => {
@@ -39,7 +40,7 @@ const UserTable = ({ users, onDelete, onEdit, onEditPassword }) => {
                     Cambiar Contraseña
                   </button>
                   <button
-                    onClick={() => onDelete(user.usuario_id)}
+                    onClick={() => onDelete(user)} // ✅ Pasamos el usuario completo
                     className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
                   >
                     Eliminar

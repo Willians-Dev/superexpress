@@ -1,4 +1,4 @@
-// src/components/ConfirmationModal.jsx
+// FRONTEND/src/components/common/ConfirmationModal.jsx
 import React from 'react';
 
 const ConfirmationModal = ({ show, onClose, onConfirm, message }) => {
@@ -16,7 +16,7 @@ const ConfirmationModal = ({ show, onClose, onConfirm, message }) => {
             Cancelar
           </button>
           <button
-            onClick={onConfirm} // Aquí se llama a handleDeleteCategory
+            onClick={onConfirm} // ✅ Aquí se llama a handleDeleteUser
             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
             Confirmar

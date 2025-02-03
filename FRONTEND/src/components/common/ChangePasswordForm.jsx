@@ -1,10 +1,10 @@
-// FRONTEND/src/components/common/ChangePasswordForm.jsx
 import React, { useState } from "react";
 
 const ChangePasswordForm = ({
   onSubmit,
   showCurrentPassword = true,
   userId = null,
+  onCancel, // ✅ Agregamos prop para cancelar
 }) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -37,6 +37,11 @@ const ChangePasswordForm = ({
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+
+      // ✅ Si se proporciona la función onCancel, redirigir
+      if (onCancel) {
+        onCancel();
+      }
     } catch (error) {
       setError(error.message || "Hubo un error al cambiar la contraseña.");
     }
@@ -86,12 +91,22 @@ const ChangePasswordForm = ({
         </div>
         {error && <p className="text-red-500">{error}</p>}
         {success && <p className="text-green-500">{success}</p>}
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Cambiar Contraseña
-        </button>
+
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={onCancel} // ✅ Llamamos a la función de cancelar
+            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            Cambiar Contraseña
+          </button>
+        </div>
       </form>
     </div>
   );

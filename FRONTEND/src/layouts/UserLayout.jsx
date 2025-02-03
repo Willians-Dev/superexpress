@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import UserTable from "../components/user/UserTable";
-import CreateUserForm from "../components/user/CreateUserForm";
+import CreateUserForm from "../components/user/CreateUserForm"; // ✅ Asegurando la importación
 import ChangePasswordForm from "../components/common/ChangePasswordForm.jsx";
 import Notification from "../components/common/Notification";
+import ConfirmationModal from "../components/ConfirmationModal"; // ✅ Modal de confirmación
 
 const UserLayout = () => {
   const [users, setUsers] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [editingPasswordUser, setEditingPasswordUser] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null); // ✅ Estado para la confirmación
   const [newUser, setNewUser] = useState({
     nombre: "",
     apellido: "",
@@ -94,10 +96,12 @@ const UserLayout = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return; // No continuar si no hay usuario seleccionado
+
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`http://localhost:5000/api/usuarios/${userId}`, {
+      const response = await fetch(`http://localhost:5000/api/usuarios/${userToDelete.usuario_id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -111,11 +115,16 @@ const UserLayout = () => {
       fetchUsers();
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
+    } finally {
+      setUserToDelete(null); // Cerrar modal después de eliminar
     }
   };
 
-  const handlePasswordSubmit = async ({ newPassword, userId }) => {
+  const handlePasswordSubmit = async ({ currentPassword, newPassword, userId }) => {
     const token = localStorage.getItem("token");
+
+    const isAdminChangingPassword = !currentPassword; // Si no hay contraseña actual, es un admin
+
     try {
       const response = await fetch(`http://localhost:5000/api/usuarios/${userId}/cambiar-password`, {
         method: "PUT",
@@ -123,12 +132,17 @@ const UserLayout = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ nuevaContrasena: newPassword }),
+        body: JSON.stringify(
+          isAdminChangingPassword
+            ? { nuevaContrasena: newPassword } // Solo para admins
+            : { contrasenaActual: currentPassword, nuevaContrasena: newPassword } // Para usuario normal
+        ),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al cambiar la contraseña.");
+        throw new Error(data.message || "Error al cambiar la contraseña.");
       }
 
       setNotification({ message: "Contraseña cambiada con éxito.", type: "success" });
@@ -137,20 +151,6 @@ const UserLayout = () => {
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
     }
-  };
-
-  const handleCancelCreate = () => {
-    setShowCreateForm(false);
-    setNewUser({ nombre: "", apellido: "", correo: "", contrasena: "", rol_id: "" });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingUser(null);
-  };
-
-  const handleCancelPasswordChange = () => {
-    setEditingPasswordUser(null);
-    navigate("/usuarios");
   };
 
   return (
@@ -183,7 +183,7 @@ const UserLayout = () => {
         >
           <button
             type="button"
-            onClick={handleCancelCreate}
+            onClick={() => setShowCreateForm(false)}
             className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
           >
             Cancelar
@@ -200,7 +200,7 @@ const UserLayout = () => {
         >
           <button
             type="button"
-            onClick={handleCancelEdit}
+            onClick={() => setEditingUser(null)}
             className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
           >
             Cancelar
@@ -211,7 +211,7 @@ const UserLayout = () => {
       {!showCreateForm && !editingUser && !editingPasswordUser && (
         <UserTable
           users={users}
-          onDelete={handleDeleteUser}
+          onDelete={(user) => setUserToDelete(user)} // ✅ Mostrar confirmación antes de eliminar
           onEdit={(user) => setEditingUser(user)}
           onEditPassword={(user) => setEditingPasswordUser(user)}
         />
@@ -221,9 +221,17 @@ const UserLayout = () => {
         <ChangePasswordForm
           onSubmit={(data) => handlePasswordSubmit({ ...data, userId: editingPasswordUser.usuario_id })}
           showCurrentPassword={false}
-          onCancel={handleCancelPasswordChange}
+          onCancel={() => setEditingPasswordUser(null)}
         />
       )}
+
+      {/* ✅ Modal de confirmación para eliminar */}
+      <ConfirmationModal
+        show={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleDeleteUser}
+        message={`¿Estás seguro de que deseas eliminar a ${userToDelete?.nombre} ${userToDelete?.apellido}?`}
+      />
     </div>
   );
 };

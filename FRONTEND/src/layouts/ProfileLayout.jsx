@@ -11,25 +11,38 @@ const ProfileLayout = () => {
 
   const handlePasswordSubmit = async ({ currentPassword, newPassword }) => {
     const token = localStorage.getItem("token");
-
-    const response = await fetch("http://localhost:5000/api/usuarios/cambiar-password", {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contrasenaActual: currentPassword,
-        nuevaContrasena: newPassword,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Error al cambiar la contraseña.");
+  
+    if (!token) {
+      alert("No hay sesión activa.");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/usuarios/cambiar-password", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contrasenaActual: currentPassword,
+          nuevaContrasena: newPassword,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Error al cambiar la contraseña.");
+      }
+  
+      alert("Contraseña cambiada con éxito.");
+      setShowPasswordForm(false);
+    } catch (error) {
+      alert(error.message || "Hubo un error al cambiar la contraseña.");
     }
   };
-
+  
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Mi Perfil</h1>

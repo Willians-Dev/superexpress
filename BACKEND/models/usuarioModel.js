@@ -27,9 +27,18 @@ const Usuario = {
       .from('usuarios')
       .select('*')
       .eq('usuario_id', usuario_id)
-      .single();
-
-    if (error) throw new Error(error.message);
+      .maybeSingle(); // Evita errores si no hay resultados
+  
+    if (error) {
+      console.error("Error en obtenerUsuarioPorId:", error.message);
+      throw new Error(error.message);
+    }
+  
+    if (!data) {
+      console.error(`Usuario con ID ${usuario_id} no encontrado.`);
+      throw new Error('Usuario no encontrado.');
+    }
+  
     return data;
   },
 
@@ -38,17 +47,20 @@ const Usuario = {
       nombre,
       apellido,
       correo,
-      ...(contrasena && { contrasena: await bcrypt.hash(contrasena, 10) }),
       rol_id,
     };
-
+  
+    if (contrasena) {
+      updateData.contrasena = await bcrypt.hash(contrasena, 10);
+    }
+  
     const { data, error } = await supabase
       .from('usuarios')
       .update(updateData)
       .eq('usuario_id', usuario_id)
       .select()
-      .single();
-
+      .maybeSingle(); // Usa maybeSingle para evitar errores
+  
     if (error) throw new Error(error.message);
     return data;
   },
@@ -72,22 +84,27 @@ const Usuario = {
 
   async obtenerUsuarioPorCorreo(correo) {
     console.log("Buscando usuario con correo:", correo);
-    const { data, error } = await supabase.from('usuarios').select('*').eq('correo', correo);
-
+    
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('correo', correo)
+      .maybeSingle(); // Previene errores cuando no hay datos
+  
     if (error) {
       console.error("Error en obtenerUsuarioPorCorreo:", error.message);
       throw new Error(error.message);
     }
-
-    if (data.length === 0) {
-      return null; // No se encontró ningún usuario
-    } else if (data.length > 1) {
-      throw new Error('Se encontraron múltiples usuarios con el mismo correo.');
+  
+    if (!data) {
+      console.log(`No se encontró usuario con el correo ${correo}`);
+      return null;
     }
-
-    console.log("Usuario encontrado:", data[0]);
-    return data[0];
+  
+    console.log("Usuario encontrado:", data);
+    return data;
   },
+
 };
 
 export default Usuario;

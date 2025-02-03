@@ -113,11 +113,18 @@ export const eliminarUsuario = async (req, res) => {
 
 // Controlador para cambiar la contraseña del usuario
 export const cambiarContrasena = async (req, res) => {
-  const { contrasenaActual, nuevaContrasena, userId } = req.body; // Incluimos userId en el body
-  const id = userId || req.user.id; // Si no se pasa userId, usamos el del token
+  const { contrasenaActual, nuevaContrasena } = req.body;
 
-  if (!nuevaContrasena) {
-    return res.status(400).json({ message: 'La nueva contraseña es obligatoria.' });
+  console.log("Usuario autenticado en cambiarContrasena:", req.user); // Verifica req.user en logs
+
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ message: 'No autorizado. Usuario no identificado.' });
+  }
+
+  const userId = req.user.id; // ID del usuario autenticado
+
+  if (!contrasenaActual || !nuevaContrasena) {
+    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
   }
 
   if (nuevaContrasena.length < 8) {
@@ -125,26 +132,21 @@ export const cambiarContrasena = async (req, res) => {
   }
 
   try {
-    // Obtener datos del usuario
-    const usuario = await Usuario.obtenerUsuarioPorId(id);
+    const usuario = await Usuario.obtenerUsuarioPorId(userId);
 
     if (!usuario) {
       return res.status(404).json({ message: 'Usuario no encontrado.' });
     }
 
-    // Si se proporciona contrasenaActual, verificarla
-    if (contrasenaActual) {
-      const passwordMatch = await bcrypt.compare(contrasenaActual, usuario.contrasena);
-      if (!passwordMatch) {
-        return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
-      }
+    const passwordMatch = await bcrypt.compare(contrasenaActual, usuario.contrasena);
+
+    if (!passwordMatch) {
+      return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
     }
 
-    // Encriptar la nueva contraseña
     const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
 
-    // Actualizar la contraseña en la base de datos
-    await Usuario.actualizarUsuario(id, { contrasena: hashedPassword });
+    await Usuario.actualizarUsuario(userId, { contrasena: hashedPassword });
 
     return res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
   } catch (error) {

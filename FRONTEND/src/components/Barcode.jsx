@@ -9,7 +9,7 @@ const Barcode = ({ code }) => {
     if (code && svgRef.current) {
       JsBarcode(svgRef.current, code, {
         format: "CODE128",     // Usa el formato CODE128
-        displayValue: false,    // Muestra el número debajo del código de barras en 'true'
+        displayValue: true,    // Muestra el número debajo del código de barras en 'true'
         height: 40,            // Altura del código de barras
         width: 1.5,            // Ancho de las barras
       });

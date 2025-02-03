@@ -6,6 +6,7 @@ const InventoryTable = ({ products }) => {
       <thead>
         <tr>
           <th className="px-4 py-2 border">Nombre</th>
+          <th className="px-4 py-2 border">Presentación</th>
           <th className="px-4 py-2 border">Stock Actual</th>
           <th className="px-4 py-2 border">Stock Mínimo</th>
           <th className="px-4 py-2 border">Código de Barras</th>
@@ -18,6 +19,7 @@ const InventoryTable = ({ products }) => {
             className={product.stock_actual < product.stock_minimo ? "bg-red-100" : ""}
           >
             <td className="border px-4 py-2">{product.nombre}</td>
+            <td className="border px-4 py-2">{product.presentacion}</td>
             <td className="border px-4 py-2">{product.stock_actual}</td>
             <td className="border px-4 py-2">{product.stock_minimo}</td>
             <td className="border px-4 py-2">{product.codigo_barra}</td>

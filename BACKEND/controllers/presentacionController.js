@@ -1,3 +1,4 @@
+//BACKEND\controllers\presentacionController.js
 import Presentacion from '../models/presentacionModel.js';
 
 export const obtenerPresentaciones = async (req, res) => {
@@ -44,5 +45,30 @@ export const eliminarPresentacion = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+export const actualizarPresentacion = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, descripcion } = req.body;
+
+  try {
+    const presentacionId = parseInt(id, 10);
+    if (isNaN(presentacionId)) {
+      return res.status(400).json({ message: "ID inválido" });
+    }
+
+    // ✅ Verificar si la presentación existe antes de actualizar
+    const presentacionExistente = await Presentacion.obtenerPresentacionPorId(presentacionId);
+    if (!presentacionExistente) {
+      return res.status(404).json({ message: "Presentación no encontrada" });
+    }
+
+    const actualizada = await Presentacion.actualizarPresentacion(presentacionId, { nombre, descripcion });
+
+    res.status(200).json({ message: "Presentación actualizada exitosamente", presentacion: actualizada });
+  } catch (error) {
+    console.error("Error al actualizar presentación:", error.message);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };

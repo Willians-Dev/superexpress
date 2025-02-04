@@ -1,15 +1,14 @@
-// FRONTEND/src/components/presentation/PresentacionList.jsx
 import React, { useState, useEffect } from "react";
 import PresentacionForm from "./PresentacionForm";
-import Notification from "../common/Notification"; // ✅ Importar notificación
-import ConfirmationModal from "../common/ConfirmationModal"; // ✅ Importar modal de confirmación
+import Notification from "../common/Notification";
+import ConfirmationModal from "../common/ConfirmationModal";
 
 const PresentacionList = () => {
   const [presentaciones, setPresentaciones] = useState([]);
   const [editingPresentacion, setEditingPresentacion] = useState(null);
   const [presentacionToDelete, setPresentacionToDelete] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [notification, setNotification] = useState({ message: "", type: "" }); // ✅ Estado para la notificación
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   // ✅ Obtener presentaciones desde el backend
   const fetchPresentaciones = async () => {
@@ -40,7 +39,7 @@ const PresentacionList = () => {
       const url = presentacion.presentacion_id
         ? `http://localhost:5000/api/presentaciones/${presentacion.presentacion_id}`
         : "http://localhost:5000/api/presentaciones";
-
+  
       const response = await fetch(url, {
         method,
         headers: {
@@ -49,31 +48,22 @@ const PresentacionList = () => {
         },
         body: JSON.stringify(presentacion),
       });
-
+  
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error al guardar presentación");
+        const errorText = await response.text(); // ✅ Obtener texto en caso de error HTML
+        console.error("Error del servidor:", errorText);
+        throw new Error("Error al guardar presentación");
       }
-
-      if (presentacion.presentacion_id) {
-        setPresentaciones((prev) =>
-          prev.map((p) =>
-            p.presentacion_id === presentacion.presentacion_id ? presentacion : p
-          )
-        );
-        setNotification({ message: "Presentación actualizada con éxito.", type: "success" });
-      } else {
-        const addedPresentacion = await response.json();
-        setPresentaciones((prev) => [...prev, addedPresentacion]);
-        setNotification({ message: "Presentación creada con éxito.", type: "success" });
-      }
-
+  
+      const data = await response.json();
+      setNotification({ message: "Presentación actualizada con éxito.", type: "success" });
       setEditingPresentacion(null);
+      fetchPresentaciones(); // ✅ Refrescar lista de presentaciones
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
     }
   };
-
+ 
   // ✅ Mostrar modal antes de eliminar
   const confirmDelete = (presentacion) => {
     setPresentacionToDelete(presentacion);

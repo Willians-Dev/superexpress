@@ -1,3 +1,4 @@
+//BACKEND\models\presentacionModel.js
 import supabase from '../config/db.js';
 
 const Presentacion = {
@@ -45,6 +46,17 @@ const Presentacion = {
 
     if (error) throw new Error(error.message);
     return { deleted: true }; // ✅ Retornar confirmación de eliminación
+  },
+
+  async actualizarPresentacion(presentacion_id, { nombre, descripcion }) {
+    const { data, error } = await supabase
+      .from('presentaciones')
+      .update({ nombre, descripcion })
+      .eq('presentacion_id', presentacion_id)
+      .select(); // ✅ Traer la presentación actualizada para verificar si existe
+
+    if (error) throw new Error(error.message);
+    return data.length > 0 ? data[0] : null; // ✅ Retorna null si no se encontró
   },
 };
 

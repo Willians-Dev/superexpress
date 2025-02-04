@@ -42,12 +42,27 @@ export const actualizarProducto = async (req, res) => {
 
 export const eliminarProducto = async (req, res) => {
   const { id } = req.params;
+  console.log("🔍 ID recibido para eliminar:", id);
+
   try {
-    const data = await Producto.eliminarProducto(id);
-    if (!data) return res.status(404).json({ message: "Producto no encontrado" });
+    const productoId = parseInt(id, 10);
+    if (isNaN(productoId)) {
+      console.log("❌ ID inválido recibido:", id);
+      return res.status(400).json({ message: "ID inválido" });
+    }
+
+    const productoEliminado = await Producto.eliminarProducto(productoId);
+    
+    if (!productoEliminado) {
+      console.log("❌ Producto no encontrado en la base de datos.");
+      return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    console.log("✅ Producto eliminado correctamente.");
     res.status(200).json({ message: "Producto eliminado exitosamente" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ Error al eliminar producto:", error.message);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 

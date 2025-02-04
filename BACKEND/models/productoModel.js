@@ -71,15 +71,22 @@ const Producto = {
   },
 
   async eliminarProducto(producto_id) {
-    const { data, error } = await supabase
-      .from('productos')
+    console.log("🔍 ID recibido en el modelo para eliminar:", producto_id);
+  
+    const { error } = await supabase
+      .from("productos")
       .delete()
-      .eq('producto_id', producto_id);
-
-    if (error) throw new Error(error.message);
-    return data;
+      .eq("producto_id", producto_id);
+  
+    if (error) {
+      console.error("❌ Error en la consulta de eliminación:", error.message);
+      throw new Error(error.message);
+    }
+  
+    console.log("✅ Producto eliminado correctamente en la base de datos.");
+    return true; // 🔥 Retornar `true` en lugar de `null` para evitar el error en el backend
   },
-
+  
   async obtenerProductoPorCodigoBarra(codigo_barra) {
     const { data, error } = await supabase
       .from('productos')

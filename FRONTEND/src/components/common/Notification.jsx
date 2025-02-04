@@ -1,3 +1,4 @@
+//FRONTEND\src\components\common\Notification.jsx
 import React from "react";
 
 const Notification = ({ type = "info", message, onClose }) => {

@@ -1,13 +1,31 @@
-// models/productoModel.js
 import supabase from '../config/db.js';
 
 const Producto = {
-  async crearProducto({ nombre, presentacion, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id }) {
+  async crearProducto({ nombre, presentacion_id, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id }) {
+    // ✅ Convertir presentacion_id a número para evitar errores
+    const presentacion = presentacion_id ? parseInt(presentacion_id, 10) : null;
+
+    // Verificar si el código de barras ya existe
+    const { data: existingProduct, error: checkError } = await supabase
+      .from('productos')
+      .select('codigo_barra')
+      .eq('codigo_barra', codigo_barra)
+      .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw new Error(checkError.message);
+    }
+
+    if (existingProduct) {
+      throw new Error("El código de barras ya está en uso.");
+    }
+
+    // Insertar el nuevo producto si el código de barras no existe
     const { data, error } = await supabase
       .from('productos')
       .insert([{ 
         nombre, 
-        presentacion, 
+        presentacion_id: presentacion, // ✅ Asegurar que se inserta un número o null
         descripcion, 
         codigo_barra, 
         precio, 
@@ -20,18 +38,18 @@ const Producto = {
     if (error) throw new Error(error.message);
     return data;
   },
-
+   
   async obtenerProductos() {
     const { data, error } = await supabase
       .from('productos')
       .select(`
         *,
         categorias (nombre),
-        presentaciones (nombre)
+        presentaciones (nombre) 
       `);
-  
+
     if (error) throw new Error(error.message);
-  
+
     return data.map((producto) => ({
       ...producto,
       categoria: producto.categorias?.nombre || 'Sin Categoría',
@@ -42,7 +60,7 @@ const Producto = {
   async obtenerProductoPorId(producto_id) {
     const { data, error } = await supabase
       .from('productos')
-      .select('*, categorias(nombre)')
+      .select('*, categorias(nombre), presentaciones(nombre)')
       .eq('producto_id', producto_id)
       .single();
 
@@ -50,12 +68,14 @@ const Producto = {
     return data;
   },
 
-  async actualizarProducto(producto_id, { nombre, presentacion, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id }) {
+  async actualizarProducto(producto_id, { nombre, presentacion_id, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id }) {
+    const presentacion = presentacion_id ? parseInt(presentacion_id, 10) : null;
+
     const { data, error } = await supabase
       .from('productos')
       .update({
         nombre, 
-        presentacion, 
+        presentacion_id: presentacion, // ✅ Asegurar que se usa un número o null
         descripcion, 
         codigo_barra, 
         precio, 

@@ -45,6 +45,60 @@ const UserLayout = () => {
     fetchUsers();
   }, []);
 
+  const handleCreateUser = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/usuarios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error al crear usuario.");
+      }
+
+      setNotification({ message: "Usuario creado exitosamente.", type: "success" });
+      setShowCreateForm(false);
+      setNewUser({ nombre: "", apellido: "", correo: "", contrasena: "", rol_id: "" });
+      fetchUsers();
+    } catch (error) {
+      setNotification({ message: error.message, type: "error" });
+    }
+  };
+
+  const handleEditUser = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/usuarios/${editingUser.usuario_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(editingUser),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error al actualizar usuario.");
+      }
+
+      setNotification({ message: "Usuario actualizado exitosamente.", type: "success" });
+      setEditingUser(null);
+      fetchUsers();
+    } catch (error) {
+      setNotification({ message: error.message, type: "error" });
+    }
+  };
+
+  // ✅ Función para eliminar usuario
   const handleDeleteUser = async () => {
     if (!userToDelete || !userToDelete.usuario_id) {
       setNotification({ message: "Error: Usuario no válido para eliminar.", type: "error" });
@@ -65,7 +119,7 @@ const UserLayout = () => {
       }
 
       setNotification({ message: "Usuario eliminado exitosamente.", type: "success" });
-      fetchUsers(); 
+      fetchUsers();
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
     } finally {
@@ -102,19 +156,8 @@ const UserLayout = () => {
             { rol_id: 1, rol_nombre: "Administrador" },
             { rol_id: 2, rol_nombre: "Usuario" },
           ]}
-          handleCreateUser={() => {
-            handleCreateUser();
-            setShowCreateForm(false);
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setShowCreateForm(false)}
-            className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
-          >
-            Cancelar
-          </button>
-        </CreateUserForm>
+          handleSubmit={handleCreateUser}
+        />
       )}
 
       {editingUser && (
@@ -125,37 +168,11 @@ const UserLayout = () => {
             { rol_id: 1, rol_nombre: "Administrador" },
             { rol_id: 2, rol_nombre: "Usuario" },
           ]}
-          handleCreateUser={() => {
-            handleEditUserSubmit();
-            setEditingUser(null);
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setEditingUser(null)}
-            className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
-          >
-            Cancelar
-          </button>
-        </CreateUserForm>
-      )}
-
-      {!showCreateForm && !editingUser && !editingPasswordUser && (
-        <UserTable
-          users={users}
-          onDelete={(user) => setUserToDelete(user)} 
-          onEdit={(user) => setEditingUser(user)}
-          onEditPassword={(user) => setEditingPasswordUser(user)}
+          handleSubmit={handleEditUser}
         />
       )}
 
-      {editingPasswordUser && (
-        <ChangePasswordForm
-          onSubmit={(data) => handlePasswordSubmit({ ...data, userId: editingPasswordUser.usuario_id })}
-          showCurrentPassword={false}
-          onCancel={() => setEditingPasswordUser(null)}
-        />
-      )}
+      <UserTable users={users} onEdit={setEditingUser} onDelete={setUserToDelete} />
 
       {/* ✅ Modal de confirmación para eliminar */}
       <ConfirmationModal

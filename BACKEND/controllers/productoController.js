@@ -3,10 +3,14 @@ import Producto from '../models/productoModel.js';
 
 export const crearProducto = async (req, res) => {
   try {
+    console.log("🔍 Datos recibidos en el backend:", req.body); // 🛠 Verificar datos enviados
+
     const data = await Producto.crearProducto(req.body);
+
     res.status(201).json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ Error al agregar producto:", error.message); // 🛠 Verificar error del servidor
+    res.status(500).json({ message: "Error interno del servidor", error: error.message });
   }
 };
 

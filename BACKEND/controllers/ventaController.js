@@ -1,28 +1,33 @@
-// controllers/ventaController.js
-import Inventario from '../models/inventarioModel.js';
+import supabase from "../config/db.js";
 
+// ✅ Registrar una nueva venta
 export const registrarVenta = async (req, res) => {
-  const { productos, usuario_id } = req.body; // Lista de productos y usuario que realiza la venta
-
-  if (!productos || productos.length === 0) {
-    return res.status(400).json({ message: 'Debe incluir al menos un producto en la venta' });
-  }
-
+  const { usuario_id, productos } = req.body; // Recibe el usuario y productos vendidos
   try {
-    for (const producto of productos) {
-      const { producto_id, cantidad } = producto;
+    const total = productos.reduce((sum, p) => sum + p.cantidad * p.precio, 0);
 
-      // Registrar salida en el inventario
-      await Inventario.registrarSalida({
-        producto_id,
-        cantidad,
-        usuario_id,
-        observaciones: 'Venta realizada',
-      });
-    }
+    // ✅ Insertar la venta en la tabla "ventas"
+    const { data: venta, error: ventaError } = await supabase
+      .from("ventas")
+      .insert([{ usuario_id, total }])
+      .select("venta_id")
+      .single();
 
-    res.status(201).json({ message: 'Venta registrada exitosamente' });
+    if (ventaError) throw new Error(ventaError.message);
+
+    // ✅ Insertar los productos en "venta_detalle"
+    const detalles = productos.map((p) => ({
+      venta_id: venta.venta_id,
+      producto_id: p.producto_id,
+      cantidad: p.cantidad,
+      precio_unitario: p.precio,
+    }));
+
+    const { error: detalleError } = await supabase.from("venta_detalle").insert(detalles);
+    if (detalleError) throw new Error(detalleError.message);
+
+    res.status(201).json({ message: "Venta registrada con éxito", venta_id: venta.venta_id });
   } catch (error) {
-    res.status(500).json({ message: `Error al registrar la venta: ${error.message}` });
+    res.status(500).json({ message: error.message });
   }
 };

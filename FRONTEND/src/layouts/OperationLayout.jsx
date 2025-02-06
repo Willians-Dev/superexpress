@@ -6,14 +6,13 @@ const OperationLayout = () => {
   const [scannedProducts, setScannedProducts] = useState([]);
   const [error, setError] = useState("");
 
-  // Agregar un producto escaneado a la lista
+  // ✅ Agregar producto escaneado o actualizar cantidad
   const handleAddProduct = (product) => {
     const existingProduct = scannedProducts.find(
       (p) => p.producto_id === product.producto_id
     );
 
     if (existingProduct) {
-      // Incrementa la cantidad del producto existente
       setScannedProducts((prevProducts) =>
         prevProducts.map((p) =>
           p.producto_id === product.producto_id
@@ -22,14 +21,22 @@ const OperationLayout = () => {
         )
       );
     } else {
-      // Agrega un nuevo producto con cantidad 1
       setScannedProducts([...scannedProducts, { ...product, cantidad: 1 }]);
     }
 
     setError("");
   };
 
-  // Finalizar venta y reiniciar la lista
+  // ✅ Modificar la cantidad manualmente en la tabla
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    setScannedProducts((prevProducts) =>
+      prevProducts.map((p) =>
+        p.producto_id === productId ? { ...p, cantidad: newQuantity } : p
+      )
+    );
+  };
+
+  // ✅ Finalizar venta y reiniciar la lista
   const handleFinalizeSale = () => {
     setScannedProducts([]);
     alert("Venta finalizada con éxito.");
@@ -54,8 +61,7 @@ const OperationLayout = () => {
         <div className="lg:col-span-6 bg-white shadow-md rounded-md p-6">
           <h2 className="text-xl font-bold mb-4">Información Adicional</h2>
           <p className="text-gray-500">
-            Aquí puedes mostrar estadísticas rápidas o instrucciones para el
-            usuario.
+            Aquí puedes mostrar estadísticas rápidas o instrucciones para el usuario.
           </p>
         </div>
 
@@ -65,6 +71,7 @@ const OperationLayout = () => {
           <ScannedProductList
             products={scannedProducts}
             onFinalizeSale={handleFinalizeSale}
+            onUpdateQuantity={handleUpdateQuantity} // ✅ Nueva función
           />
         </div>
 
@@ -74,10 +81,7 @@ const OperationLayout = () => {
           <p className="text-gray-800 text-lg">
             Total productos:{" "}
             <span className="font-bold">
-              {scannedProducts.reduce(
-                (total, product) => total + product.cantidad,
-                0
-              )}
+              {scannedProducts.reduce((total, product) => total + product.cantidad, 0)}
             </span>
           </p>
           <p className="text-gray-800 text-lg">
@@ -85,11 +89,7 @@ const OperationLayout = () => {
             <span className="font-bold">
               $
               {scannedProducts
-                .reduce(
-                  (total, product) =>
-                    total + product.cantidad * product.precio,
-                  0
-                )
+                .reduce((total, product) => total + product.cantidad * product.precio, 0)
                 .toFixed(2)}
             </span>
           </p>

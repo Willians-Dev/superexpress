@@ -1,6 +1,5 @@
 import supabase from "../config/db.js";
 
-// ✅ Registrar una nueva venta
 // ✅ Registrar una nueva venta y actualizar stock
 export const registrarVenta = async (req, res) => {
   const { usuario_id, productos } = req.body;
@@ -37,7 +36,7 @@ export const registrarVenta = async (req, res) => {
     for (const product of productos) {
       const { error: stockError } = await supabase
         .from("productos")
-        .update({ stock_actual: product.stock_actual - product.cantidad })
+        .update({ stock_actual: product.stock_actual - product.cantidad }) // ✅ Se actualiza el stock
         .eq("producto_id", product.producto_id);
 
       if (stockError) throw new Error(`Error al actualizar stock de ${product.nombre}`);
@@ -73,5 +72,56 @@ export const obtenerVenta = async (req, res) => {
     res.status(200).json({ venta, detalles });
   } catch (error) {
     res.status(500).json({ message: "Error al obtener los detalles de la venta", error: error.message });
+  }
+};
+
+// ✅ Obtener ventas en un rango de fechas
+export const obtenerVentasPorRango = async (req, res) => {
+  const { fechaInicio, fechaFin } = req.query;
+
+  console.log("📌 Recibiendo solicitud de ventas con rango:", { fechaInicio, fechaFin });
+
+  try {
+    if (!fechaInicio || !fechaFin) {
+      return res.status(400).json({ message: "❌ Las fechas son requeridas" });
+    }
+
+    const { data: ventas, error: ventasError } = await supabase
+      .from("ventas")
+      .select(`
+        venta_id,
+        fecha_venta,
+        total,
+        usuarios (
+          nombre,
+          apellido
+        ),
+        venta_detalle (
+          cantidad,
+          precio_unitario,
+          productos (
+            nombre
+          )
+        )
+      `)
+      .gte("fecha_venta", `${fechaInicio} 00:00:00`)
+      .lte("fecha_venta", `${fechaFin} 23:59:59`);
+
+    console.log("📌 Ventas obtenidas:", ventas);  // ✅ Agregado para ver los datos que devuelve Supabase
+
+    if (ventasError) {
+      console.error("❌ Error en la consulta de ventas:", ventasError);
+      throw new Error(ventasError.message);
+    }
+
+    if (!ventas || ventas.length === 0) {
+      return res.status(404).json({ message: "⚠ No se encontraron ventas en el rango de fechas" });
+    }
+
+    res.status(200).json(ventas);
+
+  } catch (error) {
+    console.error("❌ Error en obtenerVentasPorRango:", error.message);
+    res.status(500).json({ message: "Error al obtener ventas", error: error.message });
   }
 };

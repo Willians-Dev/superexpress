@@ -6,7 +6,8 @@ import {
     obtenerProductoPorId, 
     actualizarProducto, 
     eliminarProducto,
-    obtenerProductoPorCodigoBarra 
+    obtenerProductoPorCodigoBarra,
+    obtenerProductosStockCritico 
 } from '../controllers/productoController.js';
 import authMiddleware from '../middleware/authMiddleware.js';  // Middleware de autenticación, si es necesario
 
@@ -19,5 +20,7 @@ router.post('/productos', authMiddleware, crearProducto);
 router.put('/productos/:id', authMiddleware, actualizarProducto);
 router.delete('/productos/:id', authMiddleware, eliminarProducto);
 router.get('/productos/barcode/:codigo_barra', authMiddleware, obtenerProductoPorCodigoBarra);
+// ✅ Obtener productos con stock crítico
+router.get("/productos/stock-critico", authMiddleware, obtenerProductosStockCritico);
 
 export default router;

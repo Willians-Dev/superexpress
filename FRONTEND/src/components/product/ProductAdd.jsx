@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import Notification from "../common/Notification"; // ✅ Importar notificación
+import Notification from "../common/Notification";
+import JsBarcode from "jsbarcode";
 
 const ProductAdd = ({ onProductAdded }) => {
   const [newProduct, setNewProduct] = useState({
@@ -18,7 +19,7 @@ const ProductAdd = ({ onProductAdded }) => {
   const [presentaciones, setPresentaciones] = useState([]);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
-  // ✅ Obtener categorías desde el backend
+  // Obtener categorías desde el backend
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
@@ -39,7 +40,7 @@ const ProductAdd = ({ onProductAdded }) => {
     fetchCategorias();
   }, []);
 
-  // ✅ Obtener presentaciones desde el backend
+  // Obtener presentaciones desde el backend
   useEffect(() => {
     const fetchPresentaciones = async () => {
       try {
@@ -60,67 +61,65 @@ const ProductAdd = ({ onProductAdded }) => {
     fetchPresentaciones();
   }, []);
 
-  // ✅ Validación del precio con formato $0000.00
+  // Generar código de barras usando CODE128
+  const handleGenerateBarcode = () => {
+    const generatedBarcode = Math.random().toString(36).substring(2, 12).toUpperCase();
+    const barcodeElement = document.createElement("canvas");
+    JsBarcode(barcodeElement, generatedBarcode, { format: "CODE128" });
+    setNewProduct({ ...newProduct, codigo_barra: generatedBarcode });
+  };
+
+  // Manejar cambio de precio
   const handlePriceChange = (e) => {
-    let value = e.target.value.replace(/[^0-9.]/g, ""); // Permitir solo números y punto
-    if (!/^\d{0,4}(\.\d{0,2})?$/.test(value)) return; // Validar 4 enteros y 2 decimales
+    const { value } = e.target;
     setNewProduct({ ...newProduct, precio: value });
   };
 
-  // ✅ Validación para solo números enteros en stock
+  // Manejar cambio de stock
   const handleStockChange = (e) => {
     const { name, value } = e.target;
-    if (/^\d*$/.test(value)) {
-      setNewProduct({ ...newProduct, [name]: value });
-    }
+    setNewProduct({ ...newProduct, [name]: value });
   };
 
-  // ✅ Generar código de barras automáticamente (CODE 128)
-  const handleGenerateBarcode = () => {
-    const generatedCode = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-    setNewProduct({ ...newProduct, codigo_barra: generatedCode });
-  };
-
-  // ✅ Agregar Producto con validaciones
+  // Agregar Producto con validaciones
   const handleAddProduct = async (e) => {
     e.preventDefault();
-  
+
     if (!newProduct.nombre.trim()) {
       setNotification({ message: "El nombre es obligatorio.", type: "error" });
       return;
     }
-  
+
     if (!newProduct.precio || isNaN(parseFloat(newProduct.precio))) {
       setNotification({ message: "El precio debe tener formato válido (ej: $100.00).", type: "error" });
       return;
     }
-  
+
     if (!newProduct.stock_actual || isNaN(parseInt(newProduct.stock_actual))) {
       setNotification({ message: "El stock actual debe ser un número entero.", type: "error" });
       return;
     }
-  
+
     if (!newProduct.stock_minimo || isNaN(parseInt(newProduct.stock_minimo))) {
       setNotification({ message: "El stock mínimo debe ser un número entero.", type: "error" });
       return;
     }
-  
+
     if (!newProduct.codigo_barra.trim()) {
       setNotification({ message: "El código de barras es obligatorio.", type: "error" });
       return;
     }
-  
+
     if (!newProduct.presentacion_id || isNaN(parseInt(newProduct.presentacion_id, 10))) {
       setNotification({ message: "Debe seleccionar una presentación válida.", type: "error" });
       return;
     }
-  
-    // ✅ Convertir presentacion_id a número antes de enviarlo
+
     const formattedProduct = {
       ...newProduct,
-      presentacion_id: parseInt(newProduct.presentacion_id, 10), // ✅ Convertir a número
+      presentacion_id: parseInt(newProduct.presentacion_id, 10),
     };
-  
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5000/api/productos", {
@@ -131,7 +130,7 @@ const ProductAdd = ({ onProductAdded }) => {
         },
         body: JSON.stringify(formattedProduct),
       });
-  
+
       if (!response.ok) {
         const errorText = await response.text();
         if (errorText.includes("duplicate key value violates unique constraint")) {
@@ -139,16 +138,15 @@ const ProductAdd = ({ onProductAdded }) => {
         }
         throw new Error(`Error al agregar producto: ${response.status} - ${errorText}`);
       }
-  
-      const addedProduct = await response.json();
-      
+
+      // Actualizar la lista de productos sin recargar la página
       if (typeof onProductAdded === "function") {
-        onProductAdded(addedProduct);
+        onProductAdded();
       }
-  
+
       setNotification({ message: "Producto agregado con éxito.", type: "success" });
-  
-      // ✅ Resetear formulario
+
+      // Resetear formulario
       setNewProduct({
         nombre: "",
         presentacion_id: "",
@@ -161,13 +159,11 @@ const ProductAdd = ({ onProductAdded }) => {
         categoria_id: "",
       });
 
-       // ✅ Cerrar el formulario después de 1 segundo
+      // Limpiar la notificación después de 2 segundos
       setTimeout(() => {
-        if (onClose && typeof onClose === "function") {
-          onClose();
-        }
-      }, 1000);
-  
+        setNotification({ message: "", type: "" });
+      }, 2000);
+
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
     }
@@ -177,7 +173,6 @@ const ProductAdd = ({ onProductAdded }) => {
     <div className="p-6 bg-white shadow-lg rounded-lg w-full">
       <h2 className="text-lg font-bold mb-4">Agregar Producto</h2>
 
-      {/* ✅ Notificación de errores y éxito */}
       {notification.message && (
         <Notification
           message={notification.message}
@@ -205,7 +200,7 @@ const ProductAdd = ({ onProductAdded }) => {
         >
           <option value="">Seleccionar Presentación</option>
           {presentaciones.map((p) => (
-            <option key={p.presentacion_id} value={p.presentacion_id}>  {/* ✅ Ahora envía el ID de la presentación */}
+            <option key={p.presentacion_id} value={p.presentacion_id}>
               {p.nombre}
             </option>
           ))}

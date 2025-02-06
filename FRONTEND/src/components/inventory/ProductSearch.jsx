@@ -1,35 +1,38 @@
 import React, { useState } from "react";
 
-const ProductSearch = ({ products, onSelect }) => {
-  const [query, setQuery] = useState("");
+const ProductSearch = ({ onSearch }) => {
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.nombre.toLowerCase().includes(query.toLowerCase()) ||
-      product.codigo_barra.includes(query)
-  );
+  const handleSearch = (e) => {
+    e.preventDefault();
+    onSearch(searchQuery); // 🔍 Ejecutar la búsqueda
+  };
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (value === "") {
+      onSearch(""); // 🔄 Restaurar la lista de productos al borrar
+    }
+  };
 
   return (
-    <div className="mb-6">
+    <form onSubmit={handleSearch} className="mb-4 flex space-x-2">
       <input
         type="text"
-        placeholder="Buscar por nombre o código de barras"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="w-full p-2 border rounded"
+        placeholder="Buscar por nombre, categoría o código de barras"
+        value={searchQuery}
+        onChange={handleChange}
+        className="border p-2 rounded w-full"
       />
-      <ul className="mt-2">
-        {filteredProducts.map((product) => (
-          <li
-            key={product.producto_id}
-            className="py-2 px-4 border-b cursor-pointer hover:bg-gray-100"
-            onClick={() => onSelect(product)}
-          >
-            {product.nombre} - {product.codigo_barra}
-          </li>
-        ))}
-      </ul>
-    </div>
+      <button
+        type="submit"
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Buscar
+      </button>
+    </form>
   );
 };
 

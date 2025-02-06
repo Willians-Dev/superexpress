@@ -1,28 +1,43 @@
-import React from "react";
+import React from 'react';
+import Barcode from '../Barcode';
 
-const InventoryTable = ({ products }) => {
+const InventoryTable = ({ products, onSelectProduct }) => {
   return (
-    <table className="w-full bg-white border rounded shadow-md">
+    <table className="min-w-full bg-white border">
       <thead>
         <tr>
-          <th className="px-4 py-2 border">Nombre</th>
-          <th className="px-4 py-2 border">Presentación</th>
-          <th className="px-4 py-2 border">Stock Actual</th>
-          <th className="px-4 py-2 border">Stock Mínimo</th>
-          <th className="px-4 py-2 border">Código de Barras</th>
+          <th className="px-4 py-2 border-b">Nombre</th>
+          <th className="px-4 py-2 border-b">Presentación</th> {/* ✅ Nueva columna */}
+          <th className="px-4 py-2 border-b">Categoría</th>
+          <th className="px-4 py-2 border-b">Código de Barra</th>
+          <th className="px-4 py-2 border-b">Stock Actual</th>
+          <th className="px-4 py-2 border-b">Stock Mínimo</th>
+          <th className="px-4 py-2 border-b">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {products.map((product) => (
-          <tr
-            key={product.producto_id}
-            className={product.stock_actual < product.stock_minimo ? "bg-red-100" : ""}
-          >
+          <tr key={product.producto_id}>
             <td className="border px-4 py-2">{product.nombre}</td>
-            <td className="border px-4 py-2">{product.presentacion}</td>
+            <td className="border px-4 py-2">{product.presentacion || "Sin Presentación"}</td> {/* ✅ Mostrar presentación */}
+            <td className="border px-4 py-2">{product.categoria || "Sin Categoría"}</td>
+            <td className="border px-4 py-2 text-center">
+              {product.codigo_barra ? (
+                <Barcode code={product.codigo_barra} />
+              ) : (
+                "No disponible"
+              )}
+            </td>
             <td className="border px-4 py-2">{product.stock_actual}</td>
             <td className="border px-4 py-2">{product.stock_minimo}</td>
-            <td className="border px-4 py-2">{product.codigo_barra}</td>
+            <td className="border px-4 py-2 text-center">
+              <button
+                onClick={() => onSelectProduct(product)}
+                className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition"
+              >
+                Seleccionar
+              </button>
+            </td>
           </tr>
         ))}
       </tbody>

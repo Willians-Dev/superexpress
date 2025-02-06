@@ -1,4 +1,3 @@
-// FRONTEND/src/layouts/InventoryLayout.jsx
 import React, { useState, useEffect } from "react";
 import ProductSearch from "../components/inventory/ProductSearch";
 import StockAdjustmentForm from "../components/inventory/StockAdjustmentForm";
@@ -7,93 +6,103 @@ import Spinner from "../components/common/Spinner";
 import Notification from "../components/common/Notification";
 
 const InventoryLayout = () => {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([]); // Lista completa de productos
+  const [filteredProducts, setFilteredProducts] = useState([]); // Productos filtrados para la búsqueda
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
+  // ✅ Obtener productos desde el backend
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/productos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error("Error al obtener productos.");
+
+      const data = await response.json();
+      setProducts(data);
+      setFilteredProducts(data); // Inicializar con la lista completa
+    } catch (error) {
+      console.error("Error:", error);
+      setNotification({
+        message: "No se pudieron cargar los productos.",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Token no encontrado. Redirigiendo al login...");
-        }
-
-        const response = await fetch("http://localhost:5000/api/productos", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.status === 401) {
-          console.warn("Token inválido o expirado. Redirigiendo al login...");
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          window.location.href = "/"; // Redirige al login
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Error al obtener productos.");
-        }
-
-        const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Error:", error);
-        setNotification({
-          message: "No se pudieron cargar los productos.",
-          type: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
   }, []);
 
-  const handleStockUpdate = (productId, adjustment, observation) => {
-    const token = localStorage.getItem("token");
-
-    const isStockAdjustment = adjustment !== 0;
-    const isStockMinChange = observation.startsWith("Actualización de stock mínimo");
-
-    if (isStockAdjustment) {
-      fetch("http://localhost:5000/api/entradas", {
-        method: "POST",
+  // ✅ Actualizar stock en la base de datos y UI
+  const handleStockUpdate = async (productId, newStockActual, newStockMin) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:5000/api/productos/${productId}`, {
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          producto_id: productId,
-          cantidad: adjustment,
-          observaciones: observation,
-        }),
-      }).catch((err) => console.error("Error al registrar la entrada:", err));
-    }
+        body: JSON.stringify({ stock_actual: newStockActual, stock_minimo: newStockMin }),
+      });
 
-    if (isStockMinChange) {
-      const newStockMin = parseFloat(observation.match(/\d+(\.\d+)?/)[0]);
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.producto_id === productId ? { ...p, stock_minimo: newStockMin } : p
-        )
-      );
-    } else {
+      if (!response.ok) throw new Error("Error al actualizar el stock");
+
+      // ✅ Actualizar los productos en el estado
       setProducts((prev) =>
         prev.map((p) =>
           p.producto_id === productId
-            ? { ...p, stock_actual: p.stock_actual + adjustment }
+            ? { ...p, stock_actual: newStockActual, stock_minimo: newStockMin }
             : p
         )
       );
-    }
 
-    setNotification({
-      message: "Stock actualizado correctamente.",
-      type: "success",
-    });
+      // ✅ También actualizar la lista filtrada
+      setFilteredProducts((prev) =>
+        prev.map((p) =>
+          p.producto_id === productId
+            ? { ...p, stock_actual: newStockActual, stock_minimo: newStockMin }
+            : p
+        )
+      );
+
+      setNotification({
+        message: "Stock actualizado correctamente.",
+        type: "success",
+      });
+
+      setSelectedProduct(null); // Cerrar formulario de ajuste
+    } catch (error) {
+      console.error(error);
+      setNotification({
+        message: "Error al actualizar stock.",
+        type: "error",
+      });
+    }
+  };
+
+  // ✅ Función para buscar productos
+  const handleSearch = (query) => {
+    const lowerCaseQuery = query.toLowerCase();
+    if (query.trim() === "") {
+      setFilteredProducts(products); // 🔄 Restaurar lista si la búsqueda está vacía
+    } else {
+      setFilteredProducts(
+        products.filter(
+          (product) =>
+            product.nombre.toLowerCase().includes(lowerCaseQuery) ||
+            product.categoria.toLowerCase().includes(lowerCaseQuery) ||
+            product.codigo_barra.includes(lowerCaseQuery)
+        )
+      );
+    }
   };
 
   if (loading) return <Spinner />;
@@ -102,7 +111,6 @@ const InventoryLayout = () => {
     <div className="p-6 bg-gray-100">
       <h1 className="text-3xl font-bold mb-6">Gestión de Inventarios</h1>
 
-      {/* Notificación */}
       {notification.message && (
         <Notification
           message={notification.message}
@@ -111,13 +119,8 @@ const InventoryLayout = () => {
         />
       )}
 
-      {/* Búsqueda de productos */}
-      <ProductSearch
-        products={products}
-        onSelect={(product) => setSelectedProduct(product)}
-      />
+      <ProductSearch onSearch={handleSearch} />
 
-      {/* Formulario de ajuste de stock */}
       {selectedProduct && (
         <StockAdjustmentForm
           product={selectedProduct}
@@ -126,8 +129,7 @@ const InventoryLayout = () => {
         />
       )}
 
-      {/* Tabla de inventario */}
-      <InventoryTable products={products} />
+      <InventoryTable products={filteredProducts} onSelectProduct={setSelectedProduct} />
     </div>
   );
 };

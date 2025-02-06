@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
-import ProductSearch from "./ProductSearch";
-import StockAdjustmentForm from "./StockAdjustmentForm";
-import InventoryTable from "./InventoryTable";
+import React, { useState, useEffect } from 'react';
+import InventoryTable from './InventoryTable';
+import ProductSearch from './ProductSearch';
+import StockAdjustmentForm from './StockAdjustmentForm';
 
 const InventoryManagement = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
@@ -17,6 +18,7 @@ const InventoryManagement = () => {
         if (!response.ok) throw new Error("Error al obtener productos.");
         const data = await response.json();
         setProducts(data);
+        setFilteredProducts(data);
       } catch (error) {
         console.error("Error:", error);
       }
@@ -25,33 +27,42 @@ const InventoryManagement = () => {
     fetchProducts();
   }, []);
 
-  const handleStockUpdate = (productId, adjustment, observation) => {
+  const handleSearch = (query) => {
+    const lowerCaseQuery = query.toLowerCase();
+    const filtered = products.filter(
+      (product) =>
+        product.nombre.toLowerCase().includes(lowerCaseQuery) ||
+        product.categoria.toLowerCase().includes(lowerCaseQuery) ||
+        product.codigo_barra.toLowerCase().includes(lowerCaseQuery)
+    );
+    setFilteredProducts(filtered);
+  };
+
+  const handleStockUpdate = (updatedProduct) => {
     const updatedProducts = products.map((product) =>
-      product.producto_id === productId
-        ? { ...product, stock_actual: product.stock_actual + adjustment }
-        : product
+      product.producto_id === updatedProduct.producto_id ? updatedProduct : product
     );
     setProducts(updatedProducts);
+    setFilteredProducts(updatedProducts);
+    setSelectedProduct(null);
+  };
+
+  const onSelectProduct = (product) => {
+    setSelectedProduct(product);
   };
 
   return (
-    <div className="p-6 bg-gray-100">
-      <h1 className="text-2xl font-bold mb-6">Gestión de Inventarios</h1>
-
-      <ProductSearch
-        products={products}
-        onSelect={(product) => setSelectedProduct(product)}
-      />
-
-      {selectedProduct && (
+    <div>
+      <ProductSearch onSearch={handleSearch} />
+      {selectedProduct ? (
         <StockAdjustmentForm
           product={selectedProduct}
-          onStockUpdate={handleStockUpdate}
-          onClose={() => setSelectedProduct(null)}
+          onSave={handleStockUpdate}
+          onCancel={() => setSelectedProduct(null)}
         />
+      ) : (
+        <InventoryTable products={filteredProducts} onSelectProduct={onSelectProduct} />
       )}
-
-      <InventoryTable products={products} />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-// FRONTEND/src/components/Sidebar.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import UserInfo from "./UserInfo";
@@ -8,7 +7,7 @@ const Sidebar = () => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   return (
-    <div className="w-64 bg-blue-800 text-white flex flex-col min-h-screen overflow-y-auto shadow-lg">
+    <div className="w-64 bg-blue-800 text-white flex flex-col h-screen fixed left-0 top-0 shadow-lg overflow-y-auto">
       {/* Encabezado */}
       <div className="p-4 bg-blue-900 shadow-md">
         <h2 className="text-lg font-bold text-center">Panel de Control</h2>

@@ -1,9 +1,10 @@
 import supabase from "../config/db.js";
 
 // ✅ Registrar una nueva venta
+// ✅ Registrar una nueva venta y actualizar stock
 export const registrarVenta = async (req, res) => {
   const { usuario_id, productos } = req.body;
-  console.log("📩 Recibiendo venta:", req.body); // 👈 Agregado para ver qué llega
+  console.log("📩 Recibiendo venta:", req.body);
 
   try {
     if (!usuario_id || !productos || productos.length === 0) {
@@ -31,6 +32,16 @@ export const registrarVenta = async (req, res) => {
 
     const { error: detalleError } = await supabase.from("venta_detalle").insert(detalles);
     if (detalleError) throw new Error(detalleError.message);
+
+    // ✅ Actualizar stock en la tabla "productos"
+    for (const product of productos) {
+      const { error: stockError } = await supabase
+        .from("productos")
+        .update({ stock_actual: product.stock_actual - product.cantidad })
+        .eq("producto_id", product.producto_id);
+
+      if (stockError) throw new Error(`Error al actualizar stock de ${product.nombre}`);
+    }
 
     res.status(201).json({ message: "✅ Venta registrada con éxito", venta_id: venta.venta_id });
 

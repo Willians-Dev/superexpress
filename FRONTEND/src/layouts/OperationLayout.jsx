@@ -76,7 +76,7 @@ const OperationLayout = () => {
         },
         body: JSON.stringify({
           usuario_id: usuario.usuario_id,
-          productos: scannedProducts, 
+          productos: scannedProducts,
         }),
       });
   
@@ -86,6 +86,15 @@ const OperationLayout = () => {
       }
   
       const { venta_id } = await response.json();
+  
+      // ✅ Actualizar el estado del inventario en el frontend
+      setScannedProducts((prevProducts) =>
+        prevProducts.map((product) => ({
+          ...product,
+          stock_actual: product.stock_actual - product.cantidad, // Restar el stock vendido
+        }))
+      );
+  
       setSaleFinalized(true);
       setVentaId(venta_id);
       setScannedProducts([]);
@@ -97,7 +106,7 @@ const OperationLayout = () => {
       setNotification({ message: "❌ Error al registrar la venta.", type: "error" });
     }
   };
-
+  
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Operaciones</h1>

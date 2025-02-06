@@ -10,7 +10,8 @@ const OperationLayout = () => {
   const [error, setError] = useState("");
   const [saleFinalized, setSaleFinalized] = useState(false);
   const [alerts, setAlerts] = useState([]);
-  const [notification, setNotification] = useState(null); // Notificación de venta
+  const [notification, setNotification] = useState(null);
+  const [ventaId, setVentaId] = useState(null); // ✅ Guardar el ID de la venta
 
   // ✅ Agregar producto escaneado
   const handleAddProduct = (product) => {
@@ -30,7 +31,6 @@ const OperationLayout = () => {
       setScannedProducts([...scannedProducts, { ...product, cantidad: 1 }]);
     }
 
-    // 🚨 Verificar stock crítico
     if (product.stock_actual - 1 <= product.stock_minimo) {
       setAlerts((prev) => [
         ...prev,
@@ -54,54 +54,47 @@ const OperationLayout = () => {
   const handleFinalizeSale = async () => {
     try {
       const token = localStorage.getItem("token");
-
-      // Validar stock antes de procesar la venta
-      for (const product of scannedProducts) {
-        if (product.cantidad > product.stock_actual) {
-          setNotification({
-            message: `❌ No hay suficiente stock para ${product.nombre}.`,
-            type: "error",
-          });
-          return;
-        }
+      const usuario = JSON.parse(localStorage.getItem("user"));
+  
+      if (!usuario) {
+        setNotification({ message: "❌ Usuario no autenticado.", type: "error" });
+        return;
       }
-
-      // Registrar cada producto como salida
-      for (const product of scannedProducts) {
-        const response = await fetch(`http://localhost:5000/api/salidas`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            producto_id: product.producto_id,
-            cantidad: product.cantidad, // ✅ Se descuenta correctamente
-            usuario_id: JSON.parse(localStorage.getItem("user")).usuario_id,
-            observaciones: "Venta registrada",
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Error al registrar la venta");
-        }
+  
+      if (scannedProducts.length === 0) {
+        setNotification({ message: "⚠️ No hay productos para vender.", type: "warning" });
+        return;
       }
-
-      // ✅ Marcar la venta como finalizada y limpiar lista de productos
+  
+      console.log("📦 Enviando datos de venta:", scannedProducts);
+  
+      const response = await fetch("http://localhost:5000/api/ventas", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          usuario_id: usuario.usuario_id,
+          productos: scannedProducts, 
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al registrar la venta");
+      }
+  
+      const { venta_id } = await response.json();
       setSaleFinalized(true);
+      setVentaId(venta_id);
       setScannedProducts([]);
-
-      // ✅ Mostrar notificación dentro de "Productos Escaneados"
-      setNotification({
-        message: "✅ Venta realizada con éxito.",
-        type: "success",
-      });
+  
+      setNotification({ message: "✅ Venta realizada con éxito.", type: "success" });
+  
     } catch (error) {
-      console.error("Error al finalizar la venta:", error);
-      setNotification({
-        message: "❌ Error al registrar la venta.",
-        type: "error",
-      });
+      console.error("❌ Error al finalizar la venta:", error);
+      setNotification({ message: "❌ Error al registrar la venta.", type: "error" });
     }
   };
 
@@ -110,41 +103,23 @@ const OperationLayout = () => {
       <h1 className="text-3xl font-bold mb-6">Operaciones</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Escanear productos */}
         <div className="lg:col-span-6 bg-white shadow-md rounded-md p-6">
           <h2 className="text-xl font-bold mb-4">Escanear Productos</h2>
           <ProductScanner onProductScanned={handleAddProduct} setError={setError} />
           {error && <p className="text-red-500 mt-4">{error}</p>}
         </div>
 
-        {/* Notificaciones */}
         <Notifications alerts={alerts} />
 
-        {/* Productos escaneados (con notificación incluida) */}
         <div className="lg:col-span-8 bg-white shadow-md rounded-md p-6">
           <h2 className="text-xl font-bold mb-4">Productos Escaneados</h2>
-
-          {/* 🚨 Muestra la notificación de venta aquí */}
           {notification && (
-            <Notification
-              type={notification.type}
-              message={notification.message}
-              onClose={() => setNotification(null)}
-            />
+            <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
           )}
-
-          <ScannedProductList 
-            products={scannedProducts} 
-            onUpdateQuantity={handleUpdateQuantity}
-            onFinalizeSale={handleFinalizeSale}
-          />
+          <ScannedProductList products={scannedProducts} onUpdateQuantity={handleUpdateQuantity} onFinalizeSale={handleFinalizeSale} />
         </div>
 
-        {/* Resumen de la venta */}
-        <SaleSummary 
-          scannedProducts={scannedProducts} 
-          saleFinalized={saleFinalized} 
-        />
+        <SaleSummary scannedProducts={scannedProducts} saleFinalized={saleFinalized} ventaId={ventaId} />
       </div>
     </div>
   );

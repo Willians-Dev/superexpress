@@ -2,8 +2,14 @@ import supabase from "../config/db.js";
 
 // ✅ Registrar una nueva venta
 export const registrarVenta = async (req, res) => {
-  const { usuario_id, productos } = req.body; // Recibe el usuario y productos vendidos
+  const { usuario_id, productos } = req.body;
+  console.log("📩 Recibiendo venta:", req.body); // 👈 Agregado para ver qué llega
+
   try {
+    if (!usuario_id || !productos || productos.length === 0) {
+      throw new Error("❌ Datos incompletos. Asegúrate de enviar usuario_id y productos.");
+    }
+
     const total = productos.reduce((sum, p) => sum + p.cantidad * p.precio, 0);
 
     // ✅ Insertar la venta en la tabla "ventas"
@@ -26,8 +32,35 @@ export const registrarVenta = async (req, res) => {
     const { error: detalleError } = await supabase.from("venta_detalle").insert(detalles);
     if (detalleError) throw new Error(detalleError.message);
 
-    res.status(201).json({ message: "Venta registrada con éxito", venta_id: venta.venta_id });
+    res.status(201).json({ message: "✅ Venta registrada con éxito", venta_id: venta.venta_id });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ Error al registrar la venta:", error.message);
+    res.status(500).json({ message: "❌ Error en el servidor al registrar la venta", error: error.message });
+  }
+};
+
+// ✅ Obtener detalles de una venta específica
+export const obtenerVenta = async (req, res) => {
+  const { venta_id } = req.params;
+  try {
+    const { data: venta, error: ventaError } = await supabase
+      .from("ventas")
+      .select("*")
+      .eq("venta_id", venta_id)
+      .single();
+
+    if (ventaError || !venta) throw new Error("Venta no encontrada");
+
+    const { data: detalles, error: detallesError } = await supabase
+      .from("venta_detalle")
+      .select("cantidad, precio_unitario, producto_id, productos(nombre)")
+      .eq("venta_id", venta_id);
+
+    if (detallesError) throw new Error("Error al obtener detalles de la venta");
+
+    res.status(200).json({ venta, detalles });
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener los detalles de la venta", error: error.message });
   }
 };

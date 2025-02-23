@@ -34,30 +34,56 @@ const ProductList = ({ fetchProductos }) => {
       setShowModal(false);
       return;
     }
-
+  
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:5000/api/productos/${productToDelete.producto_id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       if (!response.ok) {
-        throw new Error("Error al eliminar el producto");
+        const errorText = await response.text();
+        
+        // ✅ Detecta el error de clave foránea en la respuesta del servidor
+        if (errorText.includes("violates foreign key constraint")) {
+          setNotification({
+            message: `❌ Error al eliminar el producto: "Producto con historial de venta"`,
+            type: "error",
+          });
+        } else {
+          setNotification({
+            message: "❌ Error al eliminar el producto.",
+            type: "error",
+          });
+        }
+  
+        setShowModal(false); // ✅ Cerrar modal de confirmación
+        return;
       }
-
-      setNotification({ message: "Producto eliminado con éxito.", type: "success" });
+  
+      // ✅ Producto eliminado con éxito
+      setNotification({
+        message: "✅ Producto eliminado con éxito.",
+        type: "success",
+      });
+  
       setShowModal(false);
       setProductToDelete(null);
-
-      // ✅ Recargar lista de productos
+  
+      // 🔄 Recargar lista de productos después de la eliminación
       fetchProductos().then(setProductos);
       
     } catch (error) {
-      setNotification({ message: error.message, type: "error" });
+      setNotification({
+        message: "❌ Error al eliminar el producto.",
+        type: "error",
+      });
+  
+      setShowModal(false);
     }
   };
-
+  
   return (
     <div className="overflow-x-auto">
       <h2 className="text-lg font-bold mb-4">Lista de Productos</h2>

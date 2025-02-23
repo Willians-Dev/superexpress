@@ -3,10 +3,11 @@ import InventoryTable from './InventoryTable';
 import ProductSearch from './ProductSearch';
 import StockAdjustmentForm from './StockAdjustmentForm';
 
-const InventoryManagement = () => {
+const InventoryManagement = ({ setStockCritical }) => { // 🔴 Se agrega prop para enviar productos críticos
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [stockCriticalProducts, setStockCriticalProducts] = useState([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -19,6 +20,11 @@ const InventoryManagement = () => {
         const data = await response.json();
         setProducts(data);
         setFilteredProducts(data);
+
+        // 🔴 Filtrar productos en stock crítico y actualizar el estado
+        const criticalProducts = data.filter(p => p.stock_actual <= p.stock_minimo);
+        setStockCriticalProducts(criticalProducts);
+        setStockCritical(criticalProducts); // 🔴 Enviar a OperationLayout
       } catch (error) {
         console.error("Error:", error);
       }
@@ -45,6 +51,11 @@ const InventoryManagement = () => {
     setProducts(updatedProducts);
     setFilteredProducts(updatedProducts);
     setSelectedProduct(null);
+
+    // 🔄 Recalcular productos en stock crítico
+    const criticalProducts = updatedProducts.filter(p => p.stock_actual <= p.stock_minimo);
+    setStockCriticalProducts(criticalProducts);
+    setStockCritical(criticalProducts); // 🔴 Actualizar en Operaciones
   };
 
   const onSelectProduct = (product) => {

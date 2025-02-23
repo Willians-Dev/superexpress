@@ -139,12 +139,12 @@ const ProductAdd = ({ onProductAdded }) => {
         throw new Error(`Error al agregar producto: ${response.status} - ${errorText}`);
       }
 
-      // Actualizar la lista de productos sin recargar la página
+      setNotification({ message: "Producto agregado con éxito.", type: "success" });
+
+      // Llamar a la función de padre para recargar la lista de productos
       if (typeof onProductAdded === "function") {
         onProductAdded();
       }
-
-      setNotification({ message: "Producto agregado con éxito.", type: "success" });
 
       // Resetear formulario
       setNewProduct({
@@ -194,16 +194,20 @@ const ProductAdd = ({ onProductAdded }) => {
         <select 
           name="presentacion_id" 
           value={newProduct.presentacion_id} 
-          onChange={(e) => setNewProduct({ ...newProduct, presentacion_id: e.target.value })}
+          onChange={(e) => setNewProduct({ ...newProduct, presentacion_id: parseInt(e.target.value, 10) })}
           required
           className="border border-gray-300 p-2 rounded w-full"
         >
-          <option value="">Seleccionar Presentación</option>
-          {presentaciones.map((p) => (
-            <option key={p.presentacion_id} value={p.presentacion_id}>
-              {p.nombre}
-            </option>
-          ))}
+          <option value="" disabled>Seleccionar Presentación</option>
+          {presentaciones.length > 0 ? (
+            presentaciones.map((p) => (
+              <option key={p.presentacion_id} value={p.presentacion_id}>
+                {p.nombre}
+              </option>
+            ))
+          ) : (
+            <option value="" disabled>Cargando...</option>
+          )}
         </select>
 
         <select name="categoria_id" value={newProduct.categoria_id} onChange={(e) => setNewProduct({ ...newProduct, categoria_id: e.target.value })} required className="border border-gray-300 p-2 rounded w-full">

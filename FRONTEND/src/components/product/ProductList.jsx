@@ -3,56 +3,31 @@ import ConfirmationModal from "../common/ConfirmationModal";
 import Notification from "../common/Notification";
 import Barcode from "../Barcode";
 
-const ProductList = ({ refresh, setRefresh }) => {
+const ProductList = ({ fetchProductos }) => {
   const [productos, setProductos] = useState([]);
   const [productToDelete, setProductToDelete] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
   const [searchQuery, setSearchQuery] = useState(""); // Estado para la búsqueda
 
-  // Obtener productos desde el backend
-  const fetchProductos = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/productos", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        throw new Error("Error al obtener productos");
-      }
-
-      const data = await response.json();
-      setProductos(data);
-    } catch (error) {
-      setNotification({ message: "Error al obtener productos.", type: "error" });
-    }
-  };
-
+  // ✅ Obtener productos desde el backend
   useEffect(() => {
-    fetchProductos(); // Cargar productos al montar el componente
-  }, []);
+    fetchProductos().then(setProductos);
+  }, [fetchProductos]); // Se ejecuta cuando fetchProductos cambia
 
-  useEffect(() => {
-    if (refresh) {
-      fetchProductos();
-      setRefresh(false); // Resetear refresh después de actualizar
-    }
-  }, [refresh, setRefresh]);
-
-  // Filtrar productos basados en la consulta de búsqueda
+  // ✅ Filtrar productos según la búsqueda
   const filteredProducts = productos.filter((producto) =>
     producto.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
     producto.categoria.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Confirmar eliminación de un producto
+  // ✅ Confirmar eliminación de un producto
   const confirmDelete = (producto) => {
     setProductToDelete(producto);
     setShowModal(true);
   };
 
-  // Eliminar producto con notificación
+  // ✅ Eliminar producto y actualizar la lista
   const handleDeleteProduct = async () => {
     if (!productToDelete || !productToDelete.producto_id) {
       setNotification({ message: "Error: ID del producto no válido", type: "error" });
@@ -71,11 +46,13 @@ const ProductList = ({ refresh, setRefresh }) => {
         throw new Error("Error al eliminar el producto");
       }
 
-      setProductos((prev) => prev.filter((p) => p.producto_id !== productToDelete.producto_id));
-
       setNotification({ message: "Producto eliminado con éxito.", type: "success" });
       setShowModal(false);
       setProductToDelete(null);
+
+      // ✅ Recargar lista de productos
+      fetchProductos().then(setProductos);
+      
     } catch (error) {
       setNotification({ message: error.message, type: "error" });
     }
@@ -93,6 +70,7 @@ const ProductList = ({ refresh, setRefresh }) => {
         />
       )}
 
+      {/* 🔍 Barra de búsqueda */}
       <input
         type="text"
         placeholder="Buscar por nombre o categoría"
@@ -101,6 +79,7 @@ const ProductList = ({ refresh, setRefresh }) => {
         className="w-full p-2 border rounded mb-4"
       />
 
+      {/* 🛒 Tabla de productos */}
       <table className="min-w-full bg-white border">
         <thead>
           <tr>
@@ -137,6 +116,7 @@ const ProductList = ({ refresh, setRefresh }) => {
         </tbody>
       </table>
 
+      {/* 🗑 Modal de confirmación de eliminación */}
       <ConfirmationModal
         show={showModal}
         onClose={() => setShowModal(false)}

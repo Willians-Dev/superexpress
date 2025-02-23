@@ -3,9 +3,9 @@ import Barcode from '../Barcode';
 
 const InventoryTable = ({ products, onSelectProduct }) => {
   return (
-    <table className="min-w-full bg-white">
+    <table className="min-w-full bg-white border">
       <thead>
-        <tr>
+        <tr className="bg-gray-200">
           <th className="px-4 py-2 border-b">Nombre</th>
           <th className="px-4 py-2 border-b">Categoría</th>
           <th className="px-4 py-2 border-b">Presentación</th>
@@ -17,7 +17,12 @@ const InventoryTable = ({ products, onSelectProduct }) => {
       </thead>
       <tbody>
         {products.map((product) => (
-          <tr key={product.producto_id}>
+          <tr 
+            key={product.producto_id} 
+            className={`border ${
+              product.stock_actual < product.stock_minimo ? "bg-red-100" : ""
+            }`} // 🔴 Resaltar si stock es crítico
+          >
             <td className="border px-4 py-2">{product.nombre}</td>
             <td className="border px-4 py-2">{product.categoria || "Sin Categoría"}</td>
             <td className="border px-4 py-2">{product.presentacion || "Sin Presentación"}</td>

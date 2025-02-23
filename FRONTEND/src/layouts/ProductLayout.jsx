@@ -12,7 +12,7 @@ const ProductLayout = () => {
     setActiveSection(section);
   };
 
-  // Obtener productos desde el backend
+  // ✅ Obtener productos
   const fetchProductos = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -26,8 +26,10 @@ const ProductLayout = () => {
 
       const data = await response.json();
       setProductos(data);
+      return data; // 🔹 Se devuelve para que `ProductList` lo use en `useEffect`
     } catch (error) {
       console.error("Error al obtener productos:", error);
+      return [];
     }
   };
 
@@ -51,12 +53,10 @@ const ProductLayout = () => {
           </button>
         </div>
 
-        <hr className="border-t-2 border-gray-300 my-6" />
-
         {activeSection === 'productos' && (
           <>
             <AddProductButton onProductAdded={fetchProductos} />
-            <ProductList productos={productos} />
+            <ProductList fetchProductos={fetchProductos} />
           </>
         )}
         {activeSection === 'categorias' && <CategoryList />}

@@ -1,7 +1,7 @@
 import supabase from '../config/db.js';
 
 const Producto = {
-  async crearProducto({ nombre, presentacion_id, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id }) {
+  async crearProducto({ nombre, presentacion_id, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id, sensible_vencimiento }) {
     // ✅ Convertir presentacion_id a número para evitar errores
     const presentacion = presentacion_id ? parseInt(presentacion_id, 10) : null;
 
@@ -25,14 +25,15 @@ const Producto = {
       .from('productos')
       .insert([{ 
         nombre, 
-        presentacion_id: presentacion, // ✅ Asegurar que se inserta un número o null
+        presentacion_id: presentacion, 
         descripcion, 
         codigo_barra, 
         precio, 
         stock_actual, 
         stock_minimo, 
         fecha_caducidad, 
-        categoria_id 
+        categoria_id,
+        sensible_vencimiento: !!sensible_vencimiento // Asegurar booleano
       }]);
 
     if (error) throw new Error(error.message);
@@ -45,7 +46,7 @@ const Producto = {
       .select(`
         *,
         categorias (nombre),
-        presentaciones (nombre) 
+        presentaciones (nombre)
       `);
 
     if (error) throw new Error(error.message);
@@ -68,21 +69,22 @@ const Producto = {
     return data;
   },
 
-  async actualizarProducto(producto_id, { nombre, presentacion_id, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id }) {
+  async actualizarProducto(producto_id, { nombre, presentacion_id, descripcion, codigo_barra, precio, stock_actual, stock_minimo, fecha_caducidad, categoria_id, sensible_vencimiento }) {
     const presentacion = presentacion_id ? parseInt(presentacion_id, 10) : null;
 
     const { data, error } = await supabase
       .from('productos')
       .update({
         nombre, 
-        presentacion_id: presentacion, // ✅ Asegurar que se usa un número o null
+        presentacion_id: presentacion,
         descripcion, 
         codigo_barra, 
         precio, 
         stock_actual, 
         stock_minimo, 
         fecha_caducidad, 
-        categoria_id 
+        categoria_id,
+        sensible_vencimiento: !!sensible_vencimiento // Asegurar booleano
       })
       .eq('producto_id', producto_id);
 
@@ -104,7 +106,7 @@ const Producto = {
     }
   
     console.log("✅ Producto eliminado correctamente en la base de datos.");
-    return true; // 🔥 Retornar `true` en lugar de `null` para evitar el error en el backend
+    return true;
   },
   
   async obtenerProductoPorCodigoBarra(codigo_barra) {
@@ -117,7 +119,6 @@ const Producto = {
     if (error) throw new Error(error.message);
     return data;
   }
-  
 };
 
 export default Producto;

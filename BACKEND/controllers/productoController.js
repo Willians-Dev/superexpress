@@ -109,29 +109,37 @@ export const obtenerProductosStockCritico = async (req, res) => {
 // ✅ Obtener productos por vencer (en los próximos 14 días)
 export const obtenerProductosPorVencer = async (req, res) => {
   try {
-    const fechaActual = new Date();
+    console.log("🔍 Consultando productos próximos a vencer...");
+
+    const fechaActual = new Date().toISOString().split("T")[0];
     const fechaLimite = new Date();
-    fechaLimite.setDate(fechaActual.getDate() + 14); // 🔹 Productos con vencimiento en los próximos 14 días
+    fechaLimite.setDate(fechaLimite.getDate() + 14);
+    const fechaLimiteStr = fechaLimite.toISOString().split("T")[0];
+
+    console.log("📅 Fecha actual:", fechaActual);
+    console.log("📅 Fecha límite:", fechaLimiteStr);
 
     const { data: productos, error } = await supabase
       .from("productos")
       .select("producto_id, nombre, fecha_caducidad, sensible_vencimiento")
-      .eq("sensible_vencimiento", true) // 🔹 Solo los productos sensibles a la fecha de vencimiento
-      .gte("fecha_caducidad", fechaActual.toISOString().split("T")[0])
-      .lte("fecha_caducidad", fechaLimite.toISOString().split("T")[0]);
+      .eq("sensible_vencimiento", true)
+      .gte("fecha_caducidad", fechaActual)
+      .lte("fecha_caducidad", fechaLimiteStr);
 
     if (error) {
       console.error("❌ Error en la consulta de productos por vencer:", error);
-      throw new Error(error.message);
+      return res.status(500).json({ message: "Error en Supabase", error: error.message });
     }
 
     if (!productos || productos.length === 0) {
-      return res.status(404).json({ message: "No hay productos próximos a vencer." });
+      console.warn("⚠️ No hay productos próximos a vencer.");
+      return res.status(200).json({ message: "No hay productos próximos a vencer." }); // ✅ Evitar error 404
     }
 
+    console.log(`✅ Productos encontrados: ${productos.length}`);
     res.status(200).json(productos);
   } catch (error) {
-    console.error("❌ Error en obtenerProductosPorVencer:", error.message);
+    console.error("❌ Error en obtenerProductosPorVencer:", error);
     res.status(500).json({ message: "Error al obtener productos próximos a vencer", error: error.message });
   }
 };

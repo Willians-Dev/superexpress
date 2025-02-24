@@ -8,13 +8,15 @@ import {
     eliminarProducto,
     obtenerProductoPorCodigoBarra,
     obtenerProductosStockCritico,
-    obtenerProductosPorVencer 
+    obtenerProductosPorVencer,
+    obtenerVentasPorFecha
 } from '../controllers/productoController.js';
 import authMiddleware from '../middleware/authMiddleware.js';  // Middleware de autenticación, si es necesario
 
 const router = express.Router();
 
 // Rutas para productos
+router.get('/ventas/reporte', authMiddleware, obtenerVentasPorFecha);
 router.get("/productos/stock-critico", authMiddleware, obtenerProductosStockCritico);
 router.get("/productos/por-vencer", authMiddleware, obtenerProductosPorVencer);
 router.get('/productos', authMiddleware, obtenerProductos);

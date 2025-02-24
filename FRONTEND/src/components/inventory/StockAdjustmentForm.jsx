@@ -6,55 +6,68 @@ const StockAdjustmentForm = ({ product, onStockUpdate, onClose }) => {
   const [fechaCaducidad, setFechaCaducidad] = useState(product.fecha_caducidad || "");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (stockActual < 0 || stockMinimo < 0) {
+  
+    // 🔹 Validar que los valores sean correctos
+    if (isNaN(stockActual) || isNaN(stockMinimo)) {
+      setError("El stock debe ser un número válido.");
+      return;
+    }
+  
+    if (Number(stockActual) < 0 || Number(stockMinimo) < 0) {
       setError("El stock no puede ser negativo.");
       return;
     }
-
+  
     if (!fechaCaducidad) {
       setError("Debe ingresar una fecha de vencimiento.");
       return;
     }
-
+  
     setError("");
-
-    onStockUpdate(product.producto_id, {
-      stock_actual: parseInt(stockActual),
-      stock_minimo: parseInt(stockMinimo),
-      fecha_caducidad: fechaCaducidad
-    });
+  
+    try {
+      // 🔹 Llamar a la función de actualización
+      await onStockUpdate(product.producto_id, Number(stockActual), Number(stockMinimo), fechaCaducidad);
+  
+      onClose(); // Cerrar modal tras actualización exitosa
+    } catch (err) {
+      setError("❌ Error al actualizar el stock. Verifique los datos.");
+      console.error("Error al actualizar stock:", err);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 shadow rounded">
+    <form onSubmit={handleSubmit} className="bg-white p-4 shadow rounded w-full max-w-lg">
       <h2 className="text-xl font-semibold mb-4">Ajustar Stock para {product.nombre}</h2>
-      {error && <p className="text-red-500">{error}</p>}
       
-      <div>
-        <label>Stock Actual:</label>
+      {error && <p className="text-red-500 mb-2">{error}</p>}
+      
+      <div className="mb-3">
+        <label className="block text-gray-700">Stock Actual:</label>
         <input
           type="number"
+          min="0"
           value={stockActual}
           onChange={(e) => setStockActual(e.target.value)}
           className="border p-2 rounded w-full"
         />
       </div>
 
-      <div>
-        <label>Stock Mínimo:</label>
+      <div className="mb-3">
+        <label className="block text-gray-700">Stock Mínimo:</label>
         <input
           type="number"
+          min="0"
           value={stockMinimo}
           onChange={(e) => setStockMinimo(e.target.value)}
           className="border p-2 rounded w-full"
         />
       </div>
 
-      <div>
-        <label>Fecha de Vencimiento:</label>
+      <div className="mb-3">
+        <label className="block text-gray-700">Fecha de Vencimiento:</label>
         <input
           type="date"
           value={fechaCaducidad}
@@ -63,12 +76,14 @@ const StockAdjustmentForm = ({ product, onStockUpdate, onClose }) => {
         />
       </div>
 
-      <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mt-2">
-        Guardar
-      </button>
-      <button type="button" onClick={onClose} className="bg-red-500 text-white px-4 py-2 rounded mt-2 ml-2">
-        Cancelar
-      </button>
+      <div className="flex justify-end space-x-2">
+        <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          Guardar
+        </button>
+        <button type="button" onClick={onClose} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+          Cancelar
+        </button>
+      </div>
     </form>
   );
 };

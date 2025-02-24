@@ -21,17 +21,36 @@ const ScannedProductList = ({ products, onUpdateQuantity, onFinalizeSale }) => {
               <tr key={index}>
                 <td className="border px-4 py-2">{product.nombre}</td>
                 <td className="border px-4 py-2">{product.presentacion}</td>
-                <td className="border px-4 py-2">
+                <td className="border px-4 py-2 flex items-center gap-2">
+                  {/* Botón para disminuir */}
+                  <button
+                    className="px-2 py-1 bg-red-500 text-white rounded disabled:opacity-50"
+                    onClick={() => onUpdateQuantity(product.producto_id, Math.max(1, product.cantidad - 1))}
+                    disabled={product.cantidad <= 1}
+                  >
+                    -
+                  </button>
                   <input
                     type="number"
                     min="1"
                     max={product.stock_actual}
                     value={product.cantidad}
-                    onChange={(e) =>
-                      onUpdateQuantity(product.producto_id, parseInt(e.target.value) || 1)
-                    }
+                    onChange={(e) => {
+                      const newQuantity = parseInt(e.target.value) || 1;
+                      if (newQuantity > 0 && newQuantity <= product.stock_actual) {
+                        onUpdateQuantity(product.producto_id, newQuantity);
+                      }
+                    }}
                     className="border px-2 py-1 rounded w-16 text-center"
                   />
+                  {/* Botón para aumentar */}
+                  <button
+                    className="px-2 py-1 bg-green-500 text-white rounded disabled:opacity-50"
+                    onClick={() => onUpdateQuantity(product.producto_id, Math.min(product.stock_actual, product.cantidad + 1))}
+                    disabled={product.cantidad >= product.stock_actual}
+                  >
+                    +
+                  </button>
                 </td>
                 <td className="border px-4 py-2">${product.precio.toFixed(2)}</td>
                 <td className="border px-4 py-2">${(product.cantidad * product.precio).toFixed(2)}</td>

@@ -22,12 +22,13 @@ export const generateStockReportPDF = async () => {
 
     autoTable(doc, {
       startY: 20,
-      head: [["Producto", "Stock Actual", "Stock Mínimo", "Precio"]],
+      head: [["Producto", "Stock Actual", "Stock Mínimo", "Precio", "Fecha de Caducidad"]],
       body: productos.map((item) => [
         item.nombre,
         item.stock_actual,
         item.stock_minimo,
-        `$${item.precio.toFixed(2)}`,
+        `$${parseFloat(item.precio).toFixed(2)}`,
+        item.fecha_caducidad,
       ]),
     });
 

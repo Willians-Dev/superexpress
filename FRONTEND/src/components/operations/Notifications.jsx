@@ -12,10 +12,7 @@ const Notifications = ({ alerts }) => {
       ) : (
         <ul className="space-y-3">
           {alerts.map((alert, index) => (
-            <li 
-              key={index} 
-              className="flex items-center gap-3 bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-lg shadow-md text-lg font-medium"
-            >
+            <li key={index} className="flex items-center gap-3 bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-lg shadow-md text-lg font-medium">
               ⚠️ <span className="break-words">{alert}</span>
             </li>
           ))}

@@ -13,15 +13,12 @@ const OperationLayout = () => {
   const [notification, setNotification] = useState(null);
   const [ventaId, setVentaId] = useState(null);
 
-  // ✅ Obtener notificaciones del inventario y la API
+  // ✅ Obtener notificaciones SOLO desde la API
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const savedAlerts = localStorage.getItem("inventoryAlerts");
-        const inventoryAlerts = savedAlerts ? JSON.parse(savedAlerts) : [];
-
-        // 🔹 Obtener productos en stock crítico y por vencer
         const token = localStorage.getItem("token");
+
         const [stockResponse, expiringResponse] = await Promise.all([
           fetch("http://localhost:5000/api/productos/stock-critico", {
             headers: { Authorization: `Bearer ${token}` },
@@ -32,16 +29,23 @@ const OperationLayout = () => {
         ]);
 
         const stockData = stockResponse.ok ? await stockResponse.json() : [];
-        const expiringData = expiringResponse.ok ? await expiringResponse.json() : [];
+        let expiringData = expiringResponse.ok ? await expiringResponse.json() : [];
 
-        const stockCriticalAlerts = Array.isArray(stockData)
-          ? stockData.map((p) => `⚠️ "${p.nombre}" en stock crítico (${p.stock_actual} disponibles).`)
-          : [];
-        const expiringProductAlerts = Array.isArray(expiringData)
-          ? expiringData.map((p) => `⏳ "${p.nombre}" vence pronto (${p.fecha_caducidad}).`)
-          : [];
+        if (!Array.isArray(expiringData)) {
+          console.warn("⚠️ Advertencia: 'expiringData' no es un array. Se convertirá a vacío.");
+          expiringData = [];
+        }
 
-        setAlerts([...inventoryAlerts, ...stockCriticalAlerts, ...expiringProductAlerts]);
+        const stockCriticalAlerts = stockData.map(
+          (p) => `⚠️ El producto "${p.nombre}" está en stock crítico (${p.stock_actual} disponibles).`
+        );
+        const expiringProductAlerts = expiringData.map(
+          (p) => `⏳ El producto "${p.nombre}" vence pronto (${p.fecha_caducidad}).`
+        );
+
+        const uniqueAlerts = [...new Set([...stockCriticalAlerts, ...expiringProductAlerts])];
+
+        setAlerts(uniqueAlerts);
       } catch (error) {
         console.error("❌ Error al obtener alertas:", error);
       }
@@ -56,7 +60,28 @@ const OperationLayout = () => {
     beep.play().catch((error) => console.error("Error al reproducir sonido:", error));
   };
 
-  // ✅ Nueva función para actualizar cantidad de productos escaneados
+  // ✅ Agregar producto escaneado
+  const handleAddProduct = (product) => {
+    playBeepSound();
+
+    setScannedProducts((prev) => {
+      const existingProduct = prev.find((p) => p.producto_id === product.producto_id);
+
+      if (existingProduct) {
+        return prev.map((p) =>
+          p.producto_id === product.producto_id
+            ? { ...p, cantidad: p.cantidad + 1 }
+            : p
+        );
+      } else {
+        return [...prev, { ...product, cantidad: 1 }];
+      }
+    });
+
+    setError("");
+  };
+
+  // ✅ Actualizar cantidad de productos escaneados
   const handleUpdateQuantity = (productId, newQuantity) => {
     setScannedProducts((prev) =>
       prev.map((p) =>
@@ -65,29 +90,12 @@ const OperationLayout = () => {
     );
   };
 
-  // ✅ Agregar producto escaneado con sonido
-  const handleAddProduct = (product) => {
-    playBeepSound();
-
-    const existingProduct = scannedProducts.find((p) => p.producto_id === product.producto_id);
-    if (existingProduct) {
-      setScannedProducts((prev) =>
-        prev.map((p) =>
-          p.producto_id === product.producto_id ? { ...p, cantidad: p.cantidad + 1 } : p
-        )
-      );
-    } else {
-      setScannedProducts([...scannedProducts, { ...product, cantidad: 1 }]);
-    }
-
-    setError("");
-  };
-
   // ✅ Finalizar venta
   const handleFinalizeSale = async () => {
     try {
       const token = localStorage.getItem("token");
 
+      // Validar si algún producto supera el stock disponible
       for (const product of scannedProducts) {
         if (product.cantidad > product.stock_actual) {
           setNotification({
@@ -122,9 +130,6 @@ const OperationLayout = () => {
         type: "success",
       });
 
-      // 🔄 Actualizar alertas después de la venta
-      const updatedAlerts = JSON.parse(localStorage.getItem("inventoryAlerts")) || [];
-      setAlerts(updatedAlerts);
     } catch (error) {
       console.error("Error al finalizar la venta:", error);
       setNotification({
@@ -161,10 +166,10 @@ const OperationLayout = () => {
               onClose={() => setNotification(null)}
             />
           )}
-          <ScannedProductList 
-            products={scannedProducts} 
-            onUpdateQuantity={handleUpdateQuantity} 
-            onFinalizeSale={handleFinalizeSale} 
+          <ScannedProductList
+            products={scannedProducts}
+            onUpdateQuantity={handleUpdateQuantity}
+            onFinalizeSale={handleFinalizeSale}
           />
         </div>
 

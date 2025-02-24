@@ -3,9 +3,18 @@ import React from 'react';
 import LogoutButton from './LogoutButton';
 
 const UserInfo = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+  let user = null;
 
-  // Función para obtener el nombre del rol según el `rol_id`
+  try {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      user = JSON.parse(storedUser);
+    }
+  } catch (error) {
+    console.error('Error al parsear datos del usuario:', error);
+    localStorage.removeItem('user');
+  }
+
   const getRoleName = (roleId) => {
     switch (roleId) {
       case 1:
@@ -17,20 +26,18 @@ const UserInfo = () => {
     }
   };
 
-  // Función de cierre de sesión
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/';
   };
 
-  // Verifica que el usuario exista y obtén las iniciales
   const initials = user?.nombre && user?.apellido
     ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase()
     : '?';
 
   return (
-    <div className="flex items-center justify-between p-4 bg-blue-700 rounded-md mt-auto">
+    <div className="flex items-center justify-between p-4 bg-blue-700 rounded-md">
       <div className="flex items-center space-x-3">
         <div className="flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full">
           {initials}

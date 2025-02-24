@@ -4,28 +4,32 @@ import Usuario from '../models/usuarioModel.js';
 import bcrypt from 'bcrypt';
 
 export const loginUsuario = async (req, res) => {
-  const { correo, contrasena } = req.body;
+  const { correo, contrasena } = req.body; // Aquí declaras `contrasena`
+
+  console.log('Datos recibidos en /login:', req.body);
 
   try {
-    // Verificar si el usuario existe en la base de datos
     const usuario = await Usuario.obtenerUsuarioPorCorreo(correo);
     if (!usuario) {
+      console.log('Usuario no encontrado');
       return res.status(400).json({ message: 'Usuario no encontrado.' });
     }
 
-    // Comparar la contraseña ingresada con la contraseña encriptada almacenada
-    const passwordMatch = await bcrypt.compare(contrasena, usuario.contrasena);
+    const passwordMatch = await bcrypt.compare(contrasena, usuario.contrasena); // Error puede ocurrir aquí
+    console.log('¿Coinciden las contraseñas?', passwordMatch);
+
     if (!passwordMatch) {
+      console.log('Contraseña incorrecta');
       return res.status(400).json({ message: 'Contraseña incorrecta.' });
     }
 
-    // Generar el token JWT
     const token = generarToken(usuario);
+    console.log('Token generado:', token);
 
-    // Enviar el token como respuesta
-    res.status(200).json({ token });
+    res.status(200).json({ token, user: usuario });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error en loginUsuario:', error.message);
+    res.status(500).json({ message: 'Error interno del servidor.' });
   }
 };
 

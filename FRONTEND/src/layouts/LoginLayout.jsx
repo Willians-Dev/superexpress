@@ -2,8 +2,8 @@
 import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import LoginInfo from '../components/LoginInfo';  // Verifica la ruta correcta
-import LoginRegister from '../components/LoginRegister';  // Verifica la ruta correcta
+import LoginInfo from '../components/login/LoginInfo';  // Verifica la ruta correcta
+import LoginRegister from '../components/login/LoginRegister';  // Verifica la ruta correcta
 
 const LoginLayout = () => {
   return (

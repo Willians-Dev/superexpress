@@ -1,29 +1,36 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
+import HeaderUserInfo from "./HeaderUserInfo";
 
 const Header = () => {
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (error) {
+    console.error("Error al parsear el usuario de localStorage:", error);
+    user = null;
+  }
+
   return (
-    <header className="bg-white border-b-4 border-[#2C35E0FF] min-h-[80px]">
-      <div className="container mx-auto flex justify-between items-center py-3 px-6">
-        {/* Logo on the left */}
-        <div className="flex items-center">
-          <img src="/logo.jpg" alt="Logo" className="h-auto max-h-12 w-auto" /> {/* Nueva ruta de la imagen */}
-        </div>
+    <header className="fixed top-0 left-64 right-0 w-[calc(100%-16rem)] bg-white border-b-4 border-[#2C35E0FF] h-[80px] z-10 shadow-md flex items-center px-8">
+      {/* Logo y título */}
+      <div className="flex items-center space-x-4">
+        <img src="/logo.jpg" alt="Logo" className="h-auto max-h-12 w-auto" />
+        <h1 className="text-lg font-semibold text-gray-800">SuperExpress</h1>
+      </div>
 
-        {/* Title in the center */}
-        <div className="text-lg font-semibold text-gray-800 flex-1 text-center">
-          <h1>SuperExpress</h1>
-        </div>
+      {/* Espaciador flexible */}
+      <div className="flex-1"></div>
 
-        {/* Link to 'Sobre Nosotros' on the right */}
-        <div>
-          <Link
-            to="/sobre-nosotros"
-            className="bg-[#2C35E0FF] text-white px-4 py-2 rounded-md hover:bg-transparent hover:text-[#2C35E0FF] border border-[#2C35E0FF] transition"
-          >
-            Manual de Usuario
+      {/* Parte derecha: UserInfo */}
+      <div className="flex items-center space-x-6">
+        {user ? (
+          <HeaderUserInfo />
+        ) : (
+          <Link to="/login" className="text-[#2C35E0FF] hover:underline">
+            Iniciar Sesión
           </Link>
-        </div>
+        )}
       </div>
     </header>
   );

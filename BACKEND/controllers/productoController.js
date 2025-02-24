@@ -85,23 +85,27 @@ export const obtenerProductoPorCodigoBarra = async (req, res) => {
 // ✅ Obtener productos en stock crítico
 export const obtenerProductosStockCritico = async (req, res) => {
   try {
+    console.log("🔍 Consultando productos en stock crítico...");
+
     const { data: productos, error } = await supabase
       .from("productos")
       .select("producto_id, nombre, stock_actual, stock_minimo")
-      .lte("stock_actual", supabase.raw("stock_minimo")); // 🔹 Productos donde el stock_actual <= stock_minimo
+      .lte("stock_actual", supabase.raw("stock_minimo")); // 🔹 Productos donde stock_actual <= stock_minimo
 
     if (error) {
       console.error("❌ Error en la consulta de productos críticos:", error);
-      throw new Error(error.message);
+      return res.status(500).json({ message: "Error en Supabase", error: error.message });
     }
 
     if (!productos || productos.length === 0) {
-      return res.status(404).json({ message: "No hay productos en stock crítico." });
+      console.warn("⚠️ No hay productos en stock crítico.");
+      return res.status(200).json([]); // ✅ Evitar error 404
     }
 
+    console.log(`✅ Productos en stock crítico encontrados: ${productos.length}`);
     res.status(200).json(productos);
   } catch (error) {
-    console.error("❌ Error en obtenerProductosStockCritico:", error.message);
+    console.error("❌ Error en obtenerProductosStockCritico:", error);
     res.status(500).json({ message: "Error al obtener productos en stock crítico", error: error.message });
   }
 };

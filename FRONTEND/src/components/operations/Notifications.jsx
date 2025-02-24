@@ -17,4 +17,4 @@ const Notifications = ({ alerts }) => {
   );
 };
 
-export default Notifications; // ✅ Asegurar la exportación por defecto
+export default Notifications;

@@ -25,7 +25,7 @@ app.use('/api', rolRoutes);
 app.use('/api', productoRoutes);
 app.use('/api', inventarioRoutes);
 app.use('/api', categoriaRoutes);
-app.use('/api', ventaRoutes); // ✅ Ya no hay duplicado
+app.use('/api', ventaRoutes); //
 app.use('/api', presentacionRoutes);
 
 // Inicializar el servidor

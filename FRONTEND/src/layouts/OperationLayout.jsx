@@ -9,42 +9,74 @@ const OperationLayout = () => {
   const [scannedProducts, setScannedProducts] = useState([]);
   const [error, setError] = useState("");
   const [saleFinalized, setSaleFinalized] = useState(false);
-  const [alerts, setAlerts] = useState([]); // 🔴 Notificaciones fijas de stock crítico
+  const [alerts, setAlerts] = useState([]); // 🔴 Notificaciones combinadas de stock crítico y productos por vencer
   const [notification, setNotification] = useState(null);
   const [ventaId, setVentaId] = useState(null);
 
-  // ✅ Función reutilizable para obtener productos en stock crítico
+  // ✅ Obtener productos en stock crítico
   const fetchStockCriticalProducts = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("http://localhost:5000/api/productos/stock-critico", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Error desconocido.");
+        console.warn("⚠️ No se pudo obtener productos en stock crítico.");
+        return [];
       }
-
+  
       const data = await response.json();
-
-      if (data.length === 0) {
-        setAlerts([]); // ✅ No hay alertas si no hay productos críticos
-      } else {
-        const newAlerts = data.map(
-          (product) => `⚠️ El producto "${product.nombre}" está en stock crítico (${product.stock_actual} disponibles).`
-        );
-        setAlerts(newAlerts);
-      }
+      return Array.isArray(data) ? data : []; // ✅ Asegurar que siempre devuelva un array
     } catch (error) {
       console.error("❌ Error al obtener productos en stock crítico:", error);
-      setAlerts(["⚠️ No se pudo obtener la información del stock crítico."]);
+      return [];
+    }
+  };
+  
+  // ✅ Obtener productos próximos a vencer
+  const fetchExpiringProducts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/productos/por-vencer", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok || !Array.isArray(data)) {
+        console.warn("⚠️ No hay productos próximos a vencer.");
+        return [];
+      }
+  
+      return data;
+    } catch (error) {
+      console.error("❌ Error al obtener productos por vencer:", error);
+      return [];
     }
   };
 
-  // ✅ Obtener productos en stock crítico al cargar la página
+  // ✅ Obtener todas las alertas al cargar la página
   useEffect(() => {
-    fetchStockCriticalProducts();
+    const fetchAlerts = async () => {
+      const stockCriticalAlerts = await fetchStockCriticalProducts();
+      const expiringProductAlerts = await fetchExpiringProducts();
+
+      const alerts = [];
+
+      // 🔹 Construir mensajes de alerta
+      stockCriticalAlerts.forEach((product) =>
+        alerts.push(`⚠️ El producto "${product.nombre}" está en stock crítico (${product.stock_actual} disponibles).`)
+      );
+
+      expiringProductAlerts.forEach((product) =>
+        alerts.push(`⏳ El producto "${product.nombre}" vence pronto (${product.fecha_caducidad}).`)
+      );
+
+      setAlerts(alerts);
+    };
+
+    fetchAlerts();
   }, []);
 
   // ✅ Agregar producto escaneado
@@ -75,7 +107,10 @@ const OperationLayout = () => {
 
       for (const product of scannedProducts) {
         if (product.cantidad > product.stock_actual) {
-          setNotification({ message: `❌ No hay suficiente stock para ${product.nombre}.`, type: "error" });
+          setNotification({
+            message: `❌ No hay suficiente stock para ${product.nombre}.`,
+            type: "error",
+          });
           return;
         }
       }
@@ -99,14 +134,21 @@ const OperationLayout = () => {
       setVentaId(venta_id);
       setScannedProducts([]);
 
-      setNotification({ message: "✅ Venta realizada con éxito.", type: "success" });
+      setNotification({
+        message: "✅ Venta realizada con éxito.",
+        type: "success",
+      });
 
-      // 🔄 Volver a consultar stock crítico después de la venta
-      await fetchStockCriticalProducts(); // ✅ Ahora esta función sí está disponible
-
+      // 🔄 Volver a consultar stock crítico y productos por vencer después de la venta
+      const stockCriticalAlerts = await fetchStockCriticalProducts();
+      const expiringProductAlerts = await fetchExpiringProducts();
+      setAlerts([...stockCriticalAlerts, ...expiringProductAlerts]);
     } catch (error) {
       console.error("Error al finalizar la venta:", error);
-      setNotification({ message: "❌ Error al registrar la venta.", type: "error" });
+      setNotification({
+        message: "❌ Error al registrar la venta.",
+        type: "error",
+      });
     }
   };
 
@@ -132,16 +174,24 @@ const OperationLayout = () => {
         <div className="lg:col-span-8 bg-white shadow-md rounded-md p-6">
           <h2 className="text-xl font-bold mb-4">Productos Escaneados</h2>
           {notification && (
-            <Notification type={notification.type} message={notification.message} onClose={() => setNotification(null)} />
+            <Notification
+              type={notification.type}
+              message={notification.message}
+              onClose={() => setNotification(null)}
+            />
           )}
-          <ScannedProductList 
-            products={scannedProducts} 
+          <ScannedProductList
+            products={scannedProducts}
             onFinalizeSale={handleFinalizeSale}
           />
         </div>
 
         {/* Resumen de la venta */}
-        <SaleSummary scannedProducts={scannedProducts} saleFinalized={saleFinalized} ventaId={ventaId} />
+        <SaleSummary
+          scannedProducts={scannedProducts}
+          saleFinalized={saleFinalized}
+          ventaId={ventaId}
+        />
       </div>
     </div>
   );

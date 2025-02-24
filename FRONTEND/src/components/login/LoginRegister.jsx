@@ -95,12 +95,6 @@ const LoginRegister = () => {
             </button>
           </div>
         </form>
-
-        <div className="mt-2 text-center">
-          <Link to="/recuperar-password" className="text-sm text-[#2C35E0FF] hover:underline">
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </div>
       </div>
     </main>
   );

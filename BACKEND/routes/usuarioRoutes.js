@@ -29,4 +29,7 @@ router.delete('/usuarios/:id', authMiddleware, eliminarUsuario);
 // Ruta para cambiar la contraseña del usuario autenticado
 router.put('/usuarios/cambiar-password', authMiddleware, cambiarContrasena);
 
+// Ruta para cambiar la contraseña de otro usuario (gestión de usuarios)
+router.put('/usuarios/:id/cambiar-password', authMiddleware, cambiarContrasena);
+
 export default router;

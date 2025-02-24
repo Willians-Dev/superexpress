@@ -6,13 +6,17 @@ import {
     obtenerProductoPorId, 
     actualizarProducto, 
     eliminarProducto,
-    obtenerProductoPorCodigoBarra 
+    obtenerProductoPorCodigoBarra,
+    obtenerProductosStockCritico,
+    obtenerProductosPorVencer 
 } from '../controllers/productoController.js';
 import authMiddleware from '../middleware/authMiddleware.js';  // Middleware de autenticación, si es necesario
 
 const router = express.Router();
 
 // Rutas para productos
+router.get("/productos/stock-critico", authMiddleware, obtenerProductosStockCritico);
+router.get("/productos/por-vencer", authMiddleware, obtenerProductosPorVencer);
 router.get('/productos', authMiddleware, obtenerProductos);
 router.get('/productos/:id', authMiddleware, obtenerProductoPorId);
 router.post('/productos', authMiddleware, crearProducto);

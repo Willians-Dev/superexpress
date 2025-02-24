@@ -1,68 +1,58 @@
-//FRONTEND\src\components\user\UserTable.jsx
-import React from 'react';
+// FRONTEND/src/components/user/UserTable.jsx
+import React from "react";
 
-const UserTable = ({ users, roles, handleRoleChange, handleSave, handleDelete, handlePasswordChange }) => (
-    <table className="table-auto w-full mb-6">
-      <thead>
-        <tr>
-          <th className="px-4 py-2">ID</th>
-          <th className="px-4 py-2">Nombre</th>
-          <th className="px-4 py-2">Correo</th>
-          <th className="px-4 py-2">Rol</th>
-          <th className="px-4 py-2">Acciones</th>
-          <th className="px-4 py-2">Contraseña</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users
-          .filter((user) => user && user.usuario_id) // Filtra usuarios nulos o con datos inválidos
-          .map((user) => (
-            <tr key={user.usuario_id}>
-              <td className="border px-4 py-2">{user.usuario_id}</td>
-              <td className="border px-4 py-2">
-                {user.nombre} {user.apellido}
+const UserTable = ({ users, onDelete, onEdit, onEditPassword }) => {
+  return (
+    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <table className="w-full border-collapse">
+        <thead className="bg-gray-200">
+          <tr className="text-gray-700 uppercase text-sm leading-normal">
+            <th className="py-3 px-6 text-left">Nombre</th>
+            <th className="py-3 px-6 text-left">Correo</th>
+            <th className="py-3 px-6 text-center">Rol</th>
+            <th className="py-3 px-6 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody className="text-gray-600 text-sm font-light">
+          {users.map((user) => (
+            <tr key={user.usuario_id} className="border-b border-gray-200 hover:bg-gray-100">
+              <td className="py-3 px-6 text-left whitespace-nowrap">{`${user.nombre} ${user.apellido}`}</td>
+              <td className="py-3 px-6 text-left">{user.correo}</td>
+              <td className="py-3 px-6 text-center">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  user.rol_id === 1 ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+                }`}>
+                  {user.rol_id === 1 ? "Administrador" : "Usuario"}
+                </span>
               </td>
-              <td className="border px-4 py-2">{user.correo}</td>
-              <td className="border px-4 py-2">
-                <select
-                  value={user.rol_id || ''}
-                  onChange={(e) => handleRoleChange(user.usuario_id, e.target.value)}
-                  className="p-2 rounded-md border border-gray-300"
-                >
-                  <option value="">Seleccione un rol</option>
-                  {roles.map((rol) => (
-                    <option key={rol.rol_id} value={rol.rol_id}>
-                      {rol.rol_nombre}
-                    </option>
-                  ))}
-                </select>
-              </td>
-              <td className="border px-4 py-2">
-                <button
-                  className="bg-blue-500 text-white py-1 px-3 rounded-md mr-2"
-                  onClick={() => handleSave(user)}
-                >
-                  Guardar
-                </button>
-                <button
-                  className="bg-red-500 text-white py-1 px-3 rounded-md"
-                  onClick={() => handleDelete(user.usuario_id)}
-                >
-                  Eliminar
-                </button>
-              </td>
-              <td className="border px-4 py-2">
-                <button
-                  className="bg-yellow-500 text-white py-1 px-3 rounded-md"
-                  onClick={() => handlePasswordChange(user)}
-                >
-                  Cambiar Contraseña
-                </button>
+              <td className="py-3 px-6 text-center">
+                <div className="flex justify-center space-x-2">
+                  <button
+                    onClick={() => onEdit(user)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => onEditPassword(user)}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-yellow-600 transition"
+                  >
+                    Cambiar Contraseña
+                  </button>
+                  <button
+                    onClick={() => onDelete(user)} // ✅ Pasamos el usuario completo
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   );
-  
+};
+
 export default UserTable;

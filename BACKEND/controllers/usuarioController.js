@@ -7,24 +7,24 @@ export const crearUsuario = async (req, res) => {
 
   // Validaciones de campos requeridos
   if (!nombre || !apellido || !correo || !contrasena || !rol_id) {
-    return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    return res.status(400).json({ message: "Todos los campos son obligatorios" });
   }
 
   // Validar formato del correo
   if (!/\S+@\S+\.\S+/.test(correo)) {
-    return res.status(400).json({ message: 'Correo no válido' });
+    return res.status(400).json({ message: "Correo no válido" });
   }
 
   // Validar longitud mínima de la contraseña
   if (contrasena.length < 8) {
-    return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+    return res.status(400).json({ message: "La contraseña debe tener al menos 8 caracteres" });
   }
 
   try {
     // Verificar si el correo ya está registrado
     const usuarioExistente = await Usuario.obtenerUsuarioPorCorreo(correo);
     if (usuarioExistente) {
-      return res.status(400).json({ message: 'El correo ya está registrado' });
+      return res.status(400).json({ message: "El correo ya está registrado" });
     }
 
     // Encriptar la contraseña
@@ -46,8 +46,8 @@ export const crearUsuario = async (req, res) => {
     const { contrasena: omit, ...usuarioSinPassword } = data;
     res.status(201).json(usuarioSinPassword);
   } catch (error) {
-    console.error('Error al crear usuario:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    console.error("Error al crear usuario:", error.message);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
 
@@ -90,51 +90,54 @@ export const eliminarUsuario = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Verificar si el usuario existe
     const usuarioExistente = await Usuario.obtenerUsuarioPorId(id);
 
     if (!usuarioExistente) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
+    // Intentar eliminar el usuario
     const data = await Usuario.eliminarUsuario(id);
 
     if (!data) {
-      return res.status(500).json({ message: 'Error al eliminar el usuario' });
+      return res.status(500).json({ message: 'No se pudo eliminar el usuario.' });
     }
 
-    res.status(200).json({ message: 'Usuario eliminado exitosamente' });
+    res.status(200).json({ message: 'Usuario eliminado exitosamente.' });
   } catch (error) {
     console.error('Error al eliminar usuario:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ message: `Error al eliminar usuario: ${error.message}` });
   }
 };
 
 // Controlador para cambiar la contraseña del usuario
 export const cambiarContrasena = async (req, res) => {
   const { contrasenaActual, nuevaContrasena } = req.body;
-  const { id } = req.user; // ID del usuario autenticado
+  const { id } = req.params; // ID del usuario a modificar
 
-  if (!contrasenaActual || !nuevaContrasena) {
-    return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
+  if (!nuevaContrasena) {
+    return res.status(400).json({ message: "La nueva contraseña es obligatoria." });
   }
 
   if (nuevaContrasena.length < 8) {
-    return res.status(400).json({ message: 'La nueva contraseña debe tener al menos 8 caracteres.' });
+    return res.status(400).json({ message: "La nueva contraseña debe tener al menos 8 caracteres." });
   }
 
   try {
-    // Obtener datos del usuario autenticado
     const usuario = await Usuario.obtenerUsuarioPorId(id);
 
     if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
+      return res.status(404).json({ message: "Usuario no encontrado." });
     }
 
-    // Verificar si la contraseña actual es correcta
-    const passwordMatch = await bcrypt.compare(contrasenaActual, usuario.contrasena);
+    // Si se proporciona contrasenaActual, significa que el usuario está cambiando su propia contraseña
+    if (contrasenaActual) {
+      const passwordMatch = await bcrypt.compare(contrasenaActual, usuario.contrasena);
 
-    if (!passwordMatch) {
-      return res.status(400).json({ message: 'La contraseña actual es incorrecta.' });
+      if (!passwordMatch) {
+        return res.status(400).json({ message: "La contraseña actual es incorrecta." });
+      }
     }
 
     // Encriptar la nueva contraseña
@@ -143,9 +146,9 @@ export const cambiarContrasena = async (req, res) => {
     // Actualizar la contraseña en la base de datos
     await Usuario.actualizarUsuario(id, { contrasena: hashedPassword });
 
-    return res.status(200).json({ message: 'Contraseña actualizada correctamente.' });
+    return res.status(200).json({ message: "Contraseña actualizada correctamente." });
   } catch (error) {
-    console.error('Error al cambiar contraseña:', error);
-    return res.status(500).json({ message: 'Error interno del servidor.' });
+    console.error("Error al cambiar contraseña:", error);
+    return res.status(500).json({ message: "Error interno del servidor." });
   }
 };

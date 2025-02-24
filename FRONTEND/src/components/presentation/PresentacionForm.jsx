@@ -26,9 +26,13 @@ const PresentacionForm = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!presentacion.nombre.trim()) {
+      alert("El nombre es obligatorio.");
+      return;
+    }
     onSubmit(presentacion);
-    setPresentacion({ nombre: '', descripcion: '' });
-    if (setEditingPresentacion) setEditingPresentacion(null); // Salir del modo de edición
+    setPresentacion({ nombre: "", descripcion: "" });
+    if (setEditingPresentacion) setEditingPresentacion(null);
   };
 
   const handleCancel = () => {

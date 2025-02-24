@@ -1,4 +1,3 @@
-// FRONTEND/src/components/AddProductButton.jsx
 import React, { useState } from 'react';
 import ProductAdd from './ProductAdd';
 

@@ -56,29 +56,19 @@ const OperationLayout = () => {
     }
   };
 
+
   // ✅ Obtener todas las alertas al cargar la página
   useEffect(() => {
-    const fetchAlerts = async () => {
-      const stockCriticalAlerts = await fetchStockCriticalProducts();
-      const expiringProductAlerts = await fetchExpiringProducts();
-
-      const alerts = [];
-
-      // 🔹 Construir mensajes de alerta
-      stockCriticalAlerts.forEach((product) =>
-        alerts.push(`⚠️ El producto "${product.nombre}" está en stock crítico (${product.stock_actual} disponibles).`)
-      );
-
-      expiringProductAlerts.forEach((product) =>
-        alerts.push(`⏳ El producto "${product.nombre}" vence pronto (${product.fecha_caducidad}).`)
-      );
-
-      setAlerts(alerts);
+    const fetchAlerts = () => {
+      const savedAlerts = localStorage.getItem("inventoryAlerts");
+      if (savedAlerts) {
+        setAlerts(JSON.parse(savedAlerts));
+      }
     };
 
     fetchAlerts();
   }, []);
-
+  
   // ✅ Agregar producto escaneado
   const handleAddProduct = (product) => {
     const existingProduct = scannedProducts.find(

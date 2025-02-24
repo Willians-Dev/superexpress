@@ -15,6 +15,27 @@ const InventoryLayout = () => {
   const [stockCriticalProducts, setStockCriticalProducts] = useState([]);
   const [expiringProducts, setExpiringProducts] = useState([]);
 
+  // 🔹 Guardar alertas en `localStorage`
+  const updateNotifications = (criticalProducts, expiringProducts) => {
+    const alerts = [];
+
+    if (criticalProducts.length > 0) {
+      alerts.push(`⚠️ ${criticalProducts.length} productos en stock crítico`);
+      criticalProducts.forEach((product) => {
+        alerts.push(`⚠️ El producto "${product.nombre}" está en stock crítico (${product.stock_actual} disponibles).`);
+      });
+    }
+
+    if (expiringProducts.length > 0) {
+      alerts.push(`⏳ ${expiringProducts.length} productos próximos a vencer`);
+      expiringProducts.forEach((product) => {
+        alerts.push(`⏳ El producto "${product.nombre}" vence pronto (${product.fecha_caducidad}).`);
+      });
+    }
+
+    localStorage.setItem("inventoryAlerts", JSON.stringify(alerts));
+  };
+
   // ✅ Obtener productos desde el backend
   const fetchProducts = async () => {
     try {
@@ -29,9 +50,11 @@ const InventoryLayout = () => {
       setProducts(data);
       setFilteredProducts(data);
 
-      // 🔴 Filtrar productos en stock crítico
+      // 🔍 Filtrar productos en stock crítico
       const criticalProducts = data.filter((p) => p.stock_actual <= p.stock_minimo);
       setStockCriticalProducts(criticalProducts);
+
+      updateNotifications(criticalProducts, expiringProducts);
     } catch (error) {
       console.error("Error:", error);
       setNotification({ message: "No se pudieron cargar los productos.", type: "error" });
@@ -47,26 +70,26 @@ const InventoryLayout = () => {
       const response = await fetch("http://localhost:5000/api/productos/por-vencer", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       if (response.status === 404) {
         console.warn("⚠️ No hay productos próximos a vencer.");
         setExpiringProducts([]); // 🔹 Establecer como array vacío
         return;
       }
-
+  
       if (!response.ok) {
         throw new Error("Error al obtener productos por vencer.");
       }
-
+  
       const data = await response.json();
-
+  
       // 🔍 Asegurar que `data` sea un array antes de actualizar el estado
       if (Array.isArray(data)) {
         setExpiringProducts(data);
       } else {
         setExpiringProducts([]); // Si la respuesta no es un array, aseguramos que sea vacío
       }
-
+  
       console.log("📅 Productos próximos a vencer:", data);
     } catch (error) {
       console.error("❌ Error al obtener productos por vencer:", error);
@@ -75,12 +98,13 @@ const InventoryLayout = () => {
   };
 
   useEffect(() => {
-    fetchProducts();
-    fetchExpiringProducts();
-  }, []);
+  fetchProducts();
+  fetchExpiringProducts();
+}, []);
 
-  // ✅ Actualizar stock en la base de datos y UI, incluyendo la fecha de caducidad
-  const handleStockUpdate = async (productId, updatedValues) => {
+
+  // ✅ Actualizar stock en la base de datos y UI
+  const handleStockUpdate = async (productId, newStockActual, newStockMin) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:5000/api/productos/${productId}`, {
@@ -89,33 +113,35 @@ const InventoryLayout = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedValues),
+        body: JSON.stringify({ stock_actual: newStockActual, stock_minimo: newStockMin }),
       });
 
-      if (!response.ok) throw new Error("Error al actualizar el producto");
+      if (!response.ok) throw new Error("Error al actualizar el stock");
 
       // ✅ Actualizar la lista de productos en el estado
       setProducts((prev) =>
         prev.map((p) =>
-          p.producto_id === productId ? { ...p, ...updatedValues } : p
+          p.producto_id === productId
+            ? { ...p, stock_actual: newStockActual, stock_minimo: newStockMin }
+            : p
         )
       );
 
+      // ✅ También actualizar la lista filtrada
       setFilteredProducts((prev) =>
         prev.map((p) =>
-          p.producto_id === productId ? { ...p, ...updatedValues } : p
+          p.producto_id === productId
+            ? { ...p, stock_actual: newStockActual, stock_minimo: newStockMin }
+            : p
         )
       );
 
-      setNotification({
-        message: "Producto actualizado correctamente.",
-        type: "success",
-      });
+      setNotification({ message: "Stock actualizado correctamente.", type: "success" });
 
-      setSelectedProduct(null); // Cerrar formulario
+      setSelectedProduct(null); // Cerrar formulario de ajuste
     } catch (error) {
       console.error(error);
-      setNotification({ message: "Error al actualizar el producto.", type: "error" });
+      setNotification({ message: "Error al actualizar stock.", type: "error" });
     }
   };
 
@@ -174,9 +200,9 @@ const InventoryLayout = () => {
         />
       )}
 
-      <InventoryTable
-        products={filteredProducts}
-        onSelectProduct={setSelectedProduct}
+      <InventoryTable 
+        products={filteredProducts} 
+        onSelectProduct={setSelectedProduct} 
         stockCriticalProducts={stockCriticalProducts}
         expiringProducts={expiringProducts}
       />

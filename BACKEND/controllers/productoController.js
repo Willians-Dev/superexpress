@@ -5,9 +5,7 @@ import supabase from '../config/db.js';
 export const crearProducto = async (req, res) => {
   try {
     console.log("🔍 Datos recibidos en el backend:", req.body);
-
     const data = await Producto.crearProducto(req.body);
-
     res.status(201).json(data);
   } catch (error) {
     console.error("❌ Error al agregar producto:", error.message);
@@ -42,14 +40,12 @@ export const actualizarProducto = async (req, res) => {
   try {
     console.log("📥 Datos recibidos para actualizar:", { id, stock_actual, stock_minimo, fecha_caducidad });
 
-    // ✅ Verificar que id sea un número válido
     const productoId = parseInt(id, 10);
     if (isNaN(productoId)) {
       console.error("❌ ID inválido recibido:", id);
       return res.status(400).json({ message: "ID inválido" });
     }
 
-    // ✅ Asegurar que stock_actual y stock_minimo sean números
     const stockActualNumber = Number(stock_actual);
     const stockMinimoNumber = Number(stock_minimo);
 
@@ -60,12 +56,11 @@ export const actualizarProducto = async (req, res) => {
 
     console.log("🔄 Actualizando producto en Supabase...");
 
-    // ✅ Ejecutar la actualización en Supabase
     const { data, error } = await supabase
       .from("productos")
       .update({ stock_actual: stockActualNumber, stock_minimo: stockMinimoNumber, fecha_caducidad })
       .eq("producto_id", productoId)
-      .select(); // 🔹 Agregamos `.select()` para devolver el objeto actualizado
+      .select();
 
     if (error) {
       console.error("❌ Error en Supabase:", error);
@@ -92,7 +87,7 @@ export const eliminarProducto = async (req, res) => {
     }
 
     const productoEliminado = await Producto.eliminarProducto(productoId);
-    
+
     if (!productoEliminado) {
       console.log("❌ Producto no encontrado en la base de datos.");
       return res.status(404).json({ message: "Producto no encontrado" });
@@ -122,10 +117,9 @@ export const obtenerProductosStockCritico = async (req, res) => {
   try {
     console.log("🔍 Consultando productos en stock crítico...");
 
+    // Consulta directa con comparación numérica usando SQL
     const { data: productos, error } = await supabase
-      .from("productos")
-      .select("producto_id, nombre, stock_actual, stock_minimo")
-      .lte("stock_actual", supabase.raw("stock_minimo")); // 🔹 Productos donde stock_actual <= stock_minimo
+      .rpc('obtener_productos_stock_critico');
 
     if (error) {
       console.error("❌ Error en la consulta de productos críticos:", error);
@@ -134,7 +128,7 @@ export const obtenerProductosStockCritico = async (req, res) => {
 
     if (!productos || productos.length === 0) {
       console.warn("⚠️ No hay productos en stock crítico.");
-      return res.status(200).json([]); // ✅ Evitar error 404
+      return res.status(200).json([]); // ✅ Evitar error 404 si no hay productos
     }
 
     console.log(`✅ Productos en stock crítico encontrados: ${productos.length}`);
@@ -180,5 +174,37 @@ export const obtenerProductosPorVencer = async (req, res) => {
   } catch (error) {
     console.error("❌ Error en obtenerProductosPorVencer:", error);
     res.status(500).json({ message: "Error al obtener productos próximos a vencer", error: error.message });
+  }
+};
+
+export const obtenerVentasPorFecha = async (req, res) => {
+  try {
+    const { fecha_inicio, fecha_fin } = req.query;
+
+    console.log("🔍 Consultando ventas entre:", fecha_inicio, fecha_fin);
+
+    if (!fecha_inicio || !fecha_fin) {
+      return res.status(400).json({ message: "Debes proporcionar ambas fechas." });
+    }
+
+    // Llamar a la función de Supabase
+    const { data, error } = await supabase
+      .rpc('obtener_reporte_ventas', { fecha_inicio, fecha_fin });
+
+    if (error) {
+      console.error("❌ Error en Supabase:", error);
+      return res.status(500).json({ message: "Error en Supabase", error: error.message });
+    }
+
+    if (!data || data.length === 0) {
+      console.warn("⚠️ No hay ventas en el rango seleccionado.");
+      return res.status(200).json([]); // No hay ventas
+    }
+
+    console.log(`✅ Ventas encontradas: ${data.length}`);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("❌ Error en obtenerVentasPorFecha:", error);
+    res.status(500).json({ message: "Error al obtener el reporte de ventas", error: error.message });
   }
 };

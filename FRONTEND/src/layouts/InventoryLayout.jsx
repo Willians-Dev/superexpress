@@ -104,8 +104,15 @@ const InventoryLayout = () => {
 
 
   // ✅ Actualizar stock en la base de datos y UI
-  const handleStockUpdate = async (productId, newStockActual, newStockMin) => {
+  const handleStockUpdate = async (productId, newStockActual, newStockMin, newFechaCaducidad) => {
     try {
+      console.log("📤 Enviando actualización de stock:", { 
+        productId, 
+        stock_actual: newStockActual, 
+        stock_minimo: newStockMin, 
+        fecha_caducidad: newFechaCaducidad 
+      });
+  
       const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:5000/api/productos/${productId}`, {
         method: "PUT",
@@ -113,35 +120,60 @@ const InventoryLayout = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ stock_actual: newStockActual, stock_minimo: newStockMin }),
+        body: JSON.stringify({ 
+          stock_actual: newStockActual, 
+          stock_minimo: newStockMin, 
+          fecha_caducidad: newFechaCaducidad
+        }),
       });
-
-      if (!response.ok) throw new Error("Error al actualizar el stock");
-
-      // ✅ Actualizar la lista de productos en el estado
+  
+      if (!response.ok) {
+        const errorData = await response.json(); 
+        console.error("❌ Error en la respuesta del servidor:", errorData);
+        throw new Error(errorData.message || "Error al actualizar el stock.");
+      }
+  
+      console.log("✅ Stock actualizado con éxito.");
+  
+      // ✅ Mostrar notificación de éxito
+      setNotification({ message: "Stock actualizado correctamente.", type: "success" });
+  
+      // ✅ Cerrar formulario de ajuste
+      setSelectedProduct(null);
+  
+      // ✅ Actualizar la lista de productos en el estado con `fecha_caducidad`
       setProducts((prev) =>
         prev.map((p) =>
           p.producto_id === productId
-            ? { ...p, stock_actual: newStockActual, stock_minimo: newStockMin }
+            ? { 
+                ...p, 
+                stock_actual: newStockActual, 
+                stock_minimo: newStockMin, 
+                fecha_caducidad: newFechaCaducidad || p.fecha_caducidad 
+              }
             : p
         )
       );
-
+  
       // ✅ También actualizar la lista filtrada
       setFilteredProducts((prev) =>
         prev.map((p) =>
           p.producto_id === productId
-            ? { ...p, stock_actual: newStockActual, stock_minimo: newStockMin }
+            ? { 
+                ...p, 
+                stock_actual: newStockActual, 
+                stock_minimo: newStockMin, 
+                fecha_caducidad: newFechaCaducidad || p.fecha_caducidad 
+              }
             : p
         )
       );
-
-      setNotification({ message: "Stock actualizado correctamente.", type: "success" });
-
-      setSelectedProduct(null); // Cerrar formulario de ajuste
+  
     } catch (error) {
-      console.error(error);
-      setNotification({ message: "Error al actualizar stock.", type: "error" });
+      console.error("❌ Error en la actualización:", error);
+  
+      // ✅ Mostrar notificación de error en pantalla
+      setNotification({ message: error.message || "Error al actualizar el stock.", type: "error" });
     }
   };
 

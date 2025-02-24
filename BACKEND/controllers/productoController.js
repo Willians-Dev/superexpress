@@ -37,11 +37,46 @@ export const obtenerProductoPorId = async (req, res) => {
 
 export const actualizarProducto = async (req, res) => {
   const { id } = req.params;
+  const { stock_actual, stock_minimo, fecha_caducidad } = req.body;
+
   try {
-    const data = await Producto.actualizarProducto(id, req.body);
+    console.log("📥 Datos recibidos para actualizar:", { id, stock_actual, stock_minimo, fecha_caducidad });
+
+    // ✅ Verificar que id sea un número válido
+    const productoId = parseInt(id, 10);
+    if (isNaN(productoId)) {
+      console.error("❌ ID inválido recibido:", id);
+      return res.status(400).json({ message: "ID inválido" });
+    }
+
+    // ✅ Asegurar que stock_actual y stock_minimo sean números
+    const stockActualNumber = Number(stock_actual);
+    const stockMinimoNumber = Number(stock_minimo);
+
+    if (isNaN(stockActualNumber) || isNaN(stockMinimoNumber)) {
+      console.error("❌ Stock no es un número válido:", stock_actual, stock_minimo);
+      return res.status(400).json({ message: "Stock debe ser un número válido" });
+    }
+
+    console.log("🔄 Actualizando producto en Supabase...");
+
+    // ✅ Ejecutar la actualización en Supabase
+    const { data, error } = await supabase
+      .from("productos")
+      .update({ stock_actual: stockActualNumber, stock_minimo: stockMinimoNumber, fecha_caducidad })
+      .eq("producto_id", productoId)
+      .select(); // 🔹 Agregamos `.select()` para devolver el objeto actualizado
+
+    if (error) {
+      console.error("❌ Error en Supabase:", error);
+      return res.status(500).json({ message: "Error en Supabase", error: error.message });
+    }
+
+    console.log("✅ Producto actualizado correctamente:", data);
     res.status(200).json(data);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("❌ Error en actualizarProducto:", error);
+    res.status(500).json({ message: "Error al actualizar el producto", error: error.message });
   }
 };
 

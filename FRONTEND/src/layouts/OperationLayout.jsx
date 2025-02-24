@@ -56,6 +56,15 @@ const OperationLayout = () => {
     beep.play().catch((error) => console.error("Error al reproducir sonido:", error));
   };
 
+  // ✅ Nueva función para actualizar cantidad de productos escaneados
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    setScannedProducts((prev) =>
+      prev.map((p) =>
+        p.producto_id === productId ? { ...p, cantidad: newQuantity } : p
+      )
+    );
+  };
+
   // ✅ Agregar producto escaneado con sonido
   const handleAddProduct = (product) => {
     playBeepSound();
@@ -152,7 +161,11 @@ const OperationLayout = () => {
               onClose={() => setNotification(null)}
             />
           )}
-          <ScannedProductList products={scannedProducts} onFinalizeSale={handleFinalizeSale} />
+          <ScannedProductList 
+            products={scannedProducts} 
+            onUpdateQuantity={handleUpdateQuantity} 
+            onFinalizeSale={handleFinalizeSale} 
+          />
         </div>
 
         {/* 🔹 4. Resumen de la Venta (Abajo Derecha) */}
